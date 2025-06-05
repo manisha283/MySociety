@@ -1,0 +1,56 @@
+@using MySociety.Entity.ViewModels
+@model LoginVM
+
+@{
+    ViewData["Title"] = "Login";
+    Layout = "_LoginLayout";
+}
+
+<form asp-controller="Auth" asp-action="Login">
+    <!-- Email -->
+    <div class="mb-4">
+        <div class="input-group">
+            <input asp-for="Email" class="form-control login-input p-2" id="inputEmail" placeholder=" Email*" required>
+            <span class="input-group-text">
+                <img src="/images/icons/envelope.svg" width="20px">
+            </span>
+        </div>
+        <span asp-validation-for="Email" class="text-danger d-flex justify-content-start"></span>
+    </div>
+
+    <!-- Password -->
+    <div class="mb-4">
+        <div class="input-group">
+            <input asp-for="Password" type="password" class="form-control login-input p-2" id="inputPassword"
+                placeholder=" Password*">
+            <span class="input-group-text">
+                <i class="eye-icon fa fa-eye-slash cursor-pointer" onclick="togglePassword('inputPassword', this)"></i>
+            </span>
+        </div>
+        <span asp-validation-for="Password" class="text-danger d-flex justify-content-start"></span>
+    </div>
+
+
+    <!--Remember me and Forget Password-->
+    <div class="mb-4 d-flex justify-content-between">
+        <div class="form-group">
+            <div>
+                <input asp-for="RememberMe" type="checkbox" class="form-check-input" />
+                <label asp-for="RememberMe">
+                    Remember Me
+                </label>
+            </div>
+        </div>
+        <a asp-action="ForgotPassword" asp-controller="Auth">Forgot Password?</a>
+    </div>
+
+    <div class="mb-3">
+        <button type="submit" class="btn btn-custom w-100">Login</button>
+    </div>
+
+    <div>
+        <span>Don't have an account?</span>
+        <a asp-action="Register" asp-controller="Auth">Sign up</a>
+    </div>
+
+</form>

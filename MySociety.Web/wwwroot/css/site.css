@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Ancizar+Sans:ital,wght@0,100..1000;1,100..1000&display=swap');
+
+html {
+  font-size: 18px !important;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+/* body {
+  margin-bottom: 60px;
+  font-family: "Ancizar Sans", sans-serif !important;
+  background-image: linear-gradient(to top, #fff1eb 0%, #bbe5f8 100%);
+  min-height: 100vh;
+  color: #333;
+}
+
+.bg-custom{
+  background-color: rgba(255, 255, 255, 0.6);
+} */
+
+
+
+
+
+/* css */
+
+/* .bg-custom{
+  background-image: linear-gradient(to top, #fff1eb 0%, #bbe5f8 100%);
+}
+
+.btn-custom{
+  color: white !important;
+  background-color: #3a6073   !important;
+  border: 1px solid #3a6073  ;
+} */
+
