@@ -14,13 +14,32 @@ public class BlockService : IBlockService
         _blockRepository = blockRepository;
     }
 
-    public async Task<IEnumerable<Block>> Get()
+    public async Task<IEnumerable<Block>> List()
     {
         IEnumerable<Block> list = await _blockRepository.GetByCondition(
             b => b.DeletedBy == null
         );
 
         return list;
+    }
+
+    public async Task<int> GetNumberOfFloors(int blockId)
+    {
+        Block? block = await _blockRepository.GetByIdAsync(blockId);
+        if (block == null)
+        {
+            return 0;
+        }
+        else
+        {
+            return block.NoOfFloor;
+        }
+    }
+
+    public async Task<string> GetName(int blockId)
+    {
+        Block? block = await _blockRepository.GetByIdAsync(blockId);
+        return block.Name;
     }
 
 }

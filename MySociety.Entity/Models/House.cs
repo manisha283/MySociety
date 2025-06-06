@@ -7,11 +7,9 @@ public partial class House
 {
     public int Id { get; set; }
 
+    public int HouseNumber { get; set; }
+
     public string Name { get; set; } = null!;
-
-    public int BlockId { get; set; }
-
-    public int FloorId { get; set; }
 
     public DateTime CreatedAt { get; set; }
 
@@ -25,13 +23,9 @@ public partial class House
 
     public int? DeletedBy { get; set; }
 
-    public virtual Block Block { get; set; } = null!;
-
     public virtual User CreatedByNavigation { get; set; } = null!;
 
-    public virtual Floor Floor { get; set; } = null!;
+    public virtual ICollection<HouseMapping> HouseMappings { get; set; } = new List<HouseMapping>();
 
     public virtual User UpdatedByNavigation { get; set; } = null!;
-
-    public virtual ICollection<UserHouseMapping> UserHouseMappings { get; set; } = new List<UserHouseMapping>();
 }

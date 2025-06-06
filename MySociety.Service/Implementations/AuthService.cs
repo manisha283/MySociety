@@ -2,6 +2,7 @@ using MySociety.Entity.Models;
 using MySociety.Entity.ViewModels;
 using MySociety.Repository.Interfaces;
 using MySociety.Service.Common;
+using MySociety.Service.Configuration;
 using MySociety.Service.Exceptions;
 using MySociety.Service.Helper;
 using MySociety.Service.Interfaces;
@@ -10,29 +11,33 @@ namespace MySociety.Service.Implementations;
 
 public class AuthService : IAuthService
 {
-    private readonly IGenericRepository<User> _userRepository;
     private readonly IGenericRepository<ResetPasswordToken> _resetPasswordRepository;
     private readonly IEmailService _emailService;
     private readonly IJwtService _jwtService;
     private readonly IBlockService _blockService;
     private readonly IUserService _userService;
+    private readonly IUserHouseMappingService _userHouseMappingService;
+    private readonly IHouseMappingService _houseMappingService;
+    private readonly IFloorService _floorService;
+    private readonly IHouseService _houseService;
 
-    public AuthService(IGenericRepository<User> userRepository, IEmailService emailService, IJwtService jwtService, IGenericRepository<ResetPasswordToken> resetPasswordRepository, IBlockService blockService, IUserService userService)
+    public AuthService(IEmailService emailService, IJwtService jwtService, IGenericRepository<ResetPasswordToken> resetPasswordRepository, IBlockService blockService, IUserService userService, IUserHouseMappingService userHouseMappingService, IHouseMappingService houseMappingService, IFloorService floorService, IHouseService houseService)
     {
-        _userRepository = userRepository;
         _emailService = emailService;
         _jwtService = jwtService;
         _resetPasswordRepository = resetPasswordRepository;
         _blockService = blockService;
         _userService = userService;
+        _userHouseMappingService = userHouseMappingService;
+        _houseMappingService = houseMappingService;
+        _floorService = floorService;
+        _houseService = houseService;
 
     }
 
     #region Login
     public async Task<(LoginResultVM loginResult, ResponseVM response)> Login(LoginVM loginVM)
     {
-        // User user = await _userRepository.GetByStringAsync(u => u.Email == loginVM.Email && u.DeletedBy == null  && u.IsActive == true) 
-        //             ?? throw new NotFoundException(NotificationMessages.NotFound.Replace("{0}", "User"));      
         LoginResultVM loginResultVM = new();
         ResponseVM response = new();
 
@@ -41,25 +46,27 @@ public class AuthService : IAuthService
         {
             response.Success = false;
             response.Message = NotificationMessages.NotFound.Replace("{0}", "User");
-            return (loginResultVM, response);
+        }
+        else if (!user.IsApproved)
+        {
+            response.Success = false;
+            response.Message = response.Message = NotificationMessages.UserNotApproved;
         }
         else if (!PasswordHelper.VerifyPassword(loginVM.Password, user.Password))
         {
             response.Success = false;
             response.Message = NotificationMessages.Invalid.Replace("{0}", "Credentials");
-            return (loginResultVM, response);
         }
         else
         {
             string token = await _jwtService.GenerateToken(loginVM.Email);
 
             loginResultVM.Token = token;
-            loginResultVM.UserName = user.Username;
             loginResultVM.ImageUrl = user.ProfileImg;
 
             response.Success = true;
-            return (loginResultVM, response);
         }
+        return (loginResultVM, response);
     }
     #endregion
 
@@ -148,6 +155,41 @@ public class AuthService : IAuthService
 
     #region Register
 
+    public async Task<ResponseVM> Register(RegisterVM registerVM)
+    {
+        ResponseVM response = await _userService.CheckUser(registerVM.Email);
 
-    #endregion Register
+        if (response.Success)
+        {
+            int userId = await _userService.Add(registerVM);
+            int houseMappingId = await _houseMappingService.Get(registerVM.BlockId, registerVM.FloorId, registerVM.FloorId);
+            await _userHouseMappingService.Add(userId, houseMappingId);
+
+            response.Success = true;
+            response.Message = NotificationMessages.UserRegistered;
+
+            registerVM.BlockName = await _blockService.GetName(registerVM.BlockId);
+            registerVM.FloorName = await _floorService.GetName(registerVM.FloorId);
+            registerVM.HouseName = await _houseService.GetName(registerVM.HouseId);
+
+            //Sending email to user for resetting password
+            string body = EmailTemplateHelper.NewUserRegistration(registerVM);
+            if (await _emailService.SendEmail(EmailConfig.AdminEmail, "Reset Password", body))
+            {
+                response.Success = true;
+                response.Message = NotificationMessages.EmailSent;
+            }
+            else
+            {
+                response.Success = false;
+                response.Message = NotificationMessages.EmailSendingFailed;
+            }
+        }
+
+        return response;
+    }
+
+    #endregion
+
+
 }

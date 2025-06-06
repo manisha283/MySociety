@@ -10,6 +10,7 @@ public class EmailConfig
     public static string Password { get; set; } = "P}N^{z-]7Ilp";
     public static string FromEmail { get; set; } = "test.dotnet@etatvasoft.com";
     public static string FromName { get; set; } = "MySociety";
+    public static string AdminEmail { get; set; } = "soyid27936@2mik.com";
 
     public static void LoadEmailConfiguration(IConfiguration configuration)
     {
@@ -18,7 +19,7 @@ public class EmailConfig
         Password = configuration["SmtpSettings:Password"] ?? Password;
         FromEmail = configuration["SmtpSettings:FromEmail"] ?? FromEmail;
 
-        if(int.TryParse(configuration["SmtpSettings:Port"], out int port))
+        if (int.TryParse(configuration["SmtpSettings:Port"], out int port))
         {
             Port = port;
         }

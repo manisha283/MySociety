@@ -26,12 +26,12 @@ public class GenericRepository<T> : IGenericRepository<T>
         await _context.SaveChangesAsync();
     }
 
-    public async Task<long> AddAsyncReturnId(T entity)
+    public async Task<int> AddAsyncReturnId(T entity)
     {
         await _dbSet.AddAsync(entity);
         await _context.SaveChangesAsync();
 
-        return typeof(T).GetProperty("Id")?.GetValue(entity) is long id ? id : 0;
+        return typeof(T).GetProperty("Id")?.GetValue(entity) is int id ? id : 0;
     }
     #endregion C : Create
 
@@ -39,7 +39,7 @@ public class GenericRepository<T> : IGenericRepository<T>
 
     /*----------------------retrieves a single record from the database by its primary key (id)----------------------------------------
     -------------------------------------------------------------------------------------------------------*/
-    public async Task<T?> GetByIdAsync(long id)
+    public async Task<T?> GetByIdAsync(int id)
     {
         return await _dbSet.FindAsync(id);
     }

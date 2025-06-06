@@ -7,9 +7,11 @@ public partial class Block
 {
     public int Id { get; set; }
 
+    public int BlockNumber { get; set; }
+
     public string Name { get; set; } = null!;
 
-    public int NoOfFloors { get; set; }
+    public int NoOfFloor { get; set; }
 
     public DateTime CreatedAt { get; set; }
 
@@ -25,7 +27,7 @@ public partial class Block
 
     public virtual User CreatedByNavigation { get; set; } = null!;
 
-    public virtual ICollection<House> Houses { get; set; } = new List<House>();
+    public virtual ICollection<HouseMapping> HouseMappings { get; set; } = new List<HouseMapping>();
 
     public virtual User UpdatedByNavigation { get; set; } = null!;
 }

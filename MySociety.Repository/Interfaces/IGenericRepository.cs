@@ -6,7 +6,7 @@ public interface IGenericRepository<T>
     where T : class
 {
     Task AddAsync(T entity);
-    Task<long> AddAsyncReturnId(T entity);
+    Task<int> AddAsyncReturnId(T entity);
 
     IEnumerable<T> GetAll();
 
@@ -25,7 +25,7 @@ public interface IGenericRepository<T>
         IEnumerable<T> items
     );
 
-    Task<T?> GetByIdAsync(long id);
+    Task<T?> GetByIdAsync(int id);
 
     Task<T?> GetByStringAsync(Expression<Func<T, bool>> predicate);
 

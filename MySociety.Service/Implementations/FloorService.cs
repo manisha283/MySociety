@@ -7,19 +7,43 @@ namespace MySociety.Service.Implementations;
 public class FloorService : IFloorService
 {
     private readonly IGenericRepository<Floor> _floorRepository;
+    private readonly IBlockService _blockService;
 
-    public FloorService(IGenericRepository<Floor> floorRepository)
+    public FloorService(IGenericRepository<Floor> floorRepository, IBlockService blockService)
     {
         _floorRepository = floorRepository;
+        _blockService = blockService;
+
     }
 
-    public async Task<IEnumerable<Floor>> Get(int num)
+    public async Task<IEnumerable<Floor>> List(int blockId)
     {
+        int noOfFloors = await _blockService.GetNumberOfFloors(blockId);
+
         IEnumerable<Floor> list = await _floorRepository.GetByCondition(
-            predicate: f => f.DeletedBy == null && f.FloorNo <= num
+            predicate: f => f.DeletedBy == null && f.FloorNumber <= noOfFloors
         );
-        
+
         return list;
+    }
+
+    public async Task<int> GetNumberOfHouse(int blockId)
+    {
+        Floor? floor = await _floorRepository.GetByIdAsync(blockId);
+        if (floor == null)
+        {
+            return 0;
+        }
+        else
+        {
+            return floor.NoOfHouse;
+        }
+    }
+
+    public async Task<string> GetName(int blockId)
+    {
+        Floor floor = await _floorRepository.GetByIdAsync(blockId) ?? new();
+        return floor.Name;
     }
 
 }

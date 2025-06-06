@@ -52,11 +52,13 @@ JwtConfig.LoadJwtConfiguration(builder.Configuration);
 builder.Services.AddScoped<IJwtService, JwtService>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IBlockService, BlockService>();
 builder.Services.AddScoped<IFloorService, FloorService>();
 builder.Services.AddScoped<IHouseService, HouseService>();
+builder.Services.AddScoped<IHouseMappingService, HouseMappingService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IUserHouseMappingService, UserHouseMappingService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 #endregion
 
@@ -75,6 +77,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

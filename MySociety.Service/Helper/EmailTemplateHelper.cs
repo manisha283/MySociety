@@ -1,3 +1,5 @@
+using MySociety.Entity.ViewModels;
+
 namespace MySociety.Service.Helper;
 
 public static class EmailTemplateHelper
@@ -26,6 +28,23 @@ public static class EmailTemplateHelper
                         <h3>Your Password is : {password}</h3>
                         <p>If you encounter any issues or have any question, please do not hesitate to contact our support team.</p>";
         return EmailTemplate.Replace("{0}", body);
+    }
+
+    public static string NewUserRegistration(RegisterVM registerVM)
+    {
+        string body = $@"<p>My Society - New User Registration</p>
+                     <p>A new user has registered on the system. Below are the details:</p>
+                     <ul>
+                        <li><strong>Name:</strong> {registerVM.Name}</li>
+                        <li><strong>Email:</strong> {registerVM.Email}</li>
+                        <li><strong>Block:</strong> {registerVM.BlockName}</li>
+                        <li><strong>Floor:</strong> {registerVM.FloorName}</li>
+                        <li><strong>House:</strong> {registerVM.HouseName}</li>
+                        <li><strong>Registered On:</strong> {DateTime.Now}</li>
+                     </ul>
+                     <p>Please log in to the admin panel if you wish to take any further action.</p>";
+        body = EmailTemplate.Replace("{0}", body);
+        return body;
     }
 
 }

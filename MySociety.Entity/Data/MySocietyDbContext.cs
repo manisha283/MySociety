@@ -22,6 +22,8 @@ public partial class MySocietyDbContext : DbContext
 
     public virtual DbSet<House> Houses { get; set; }
 
+    public virtual DbSet<HouseMapping> HouseMappings { get; set; }
+
     public virtual DbSet<ResetPasswordToken> ResetPasswordTokens { get; set; }
 
     public virtual DbSet<Role> Roles { get; set; }
@@ -40,6 +42,7 @@ public partial class MySocietyDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("Blocks_pkey");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.BlockNumber).HasColumnName("block_number");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp without time zone")
@@ -50,9 +53,9 @@ public partial class MySocietyDbContext : DbContext
                 .HasColumnName("deleted_at");
             entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
             entity.Property(e => e.Name)
-                .HasMaxLength(255)
+                .HasMaxLength(100)
                 .HasColumnName("name");
-            entity.Property(e => e.NoOfFloors).HasColumnName("no_of_floors");
+            entity.Property(e => e.NoOfFloor).HasColumnName("no_of_floor");
             entity.Property(e => e.UpdatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp without time zone")
@@ -84,10 +87,11 @@ public partial class MySocietyDbContext : DbContext
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("deleted_at");
             entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
-            entity.Property(e => e.FloorNo).HasColumnName("floor_no");
+            entity.Property(e => e.FloorNumber).HasColumnName("floor_number");
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
+            entity.Property(e => e.NoOfHouse).HasColumnName("no_of_house");
             entity.Property(e => e.UpdatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp without time zone")
@@ -110,6 +114,43 @@ public partial class MySocietyDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("Houses_pkey");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.DeletedAt)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("deleted_at");
+            entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(e => e.HouseNumber).HasColumnName("house_number");
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .HasColumnName("name");
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("updated_at");
+            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.HouseCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("Houses_created_by_fkey");
+
+            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.HouseUpdatedByNavigations)
+                .HasForeignKey(d => d.UpdatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("Houses_updated_by_fkey");
+        });
+
+        modelBuilder.Entity<HouseMapping>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("HouseMapping_pkey");
+
+            entity.ToTable("HouseMapping");
+
+            entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.BlockId).HasColumnName("block_id");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
@@ -121,34 +162,37 @@ public partial class MySocietyDbContext : DbContext
                 .HasColumnName("deleted_at");
             entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
             entity.Property(e => e.FloorId).HasColumnName("floor_id");
-            entity.Property(e => e.Name)
-                .HasMaxLength(255)
-                .HasColumnName("name");
+            entity.Property(e => e.HouseId).HasColumnName("house_id");
             entity.Property(e => e.UpdatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("updated_at");
             entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
 
-            entity.HasOne(d => d.Block).WithMany(p => p.Houses)
+            entity.HasOne(d => d.Block).WithMany(p => p.HouseMappings)
                 .HasForeignKey(d => d.BlockId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("Houses_block_id_fkey");
+                .HasConstraintName("HouseMapping_block_id_fkey");
 
-            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.HouseCreatedByNavigations)
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.HouseMappingCreatedByNavigations)
                 .HasForeignKey(d => d.CreatedBy)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("Houses_created_by_fkey");
+                .HasConstraintName("HouseMapping_created_by_fkey");
 
-            entity.HasOne(d => d.Floor).WithMany(p => p.Houses)
+            entity.HasOne(d => d.Floor).WithMany(p => p.HouseMappings)
                 .HasForeignKey(d => d.FloorId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("Houses_floor_id_fkey");
+                .HasConstraintName("HouseMapping_floor_id_fkey");
 
-            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.HouseUpdatedByNavigations)
+            entity.HasOne(d => d.House).WithMany(p => p.HouseMappings)
+                .HasForeignKey(d => d.HouseId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("HouseMapping_house_id_fkey");
+
+            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.HouseMappingUpdatedByNavigations)
                 .HasForeignKey(d => d.UpdatedBy)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("Houses_updated_by_fkey");
+                .HasConstraintName("HouseMapping_updated_by_fkey");
         });
 
         modelBuilder.Entity<ResetPasswordToken>(entity =>
@@ -205,6 +249,7 @@ public partial class MySocietyDbContext : DbContext
                 .IsRequired()
                 .HasDefaultValueSql("true")
                 .HasColumnName("is_active");
+            entity.Property(e => e.IsApproved).HasColumnName("is_approved");
             entity.Property(e => e.Name)
                 .HasMaxLength(50)
                 .HasColumnName("name");
@@ -223,9 +268,6 @@ public partial class MySocietyDbContext : DbContext
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("updated_at");
             entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
-            entity.Property(e => e.Username)
-                .HasMaxLength(255)
-                .HasColumnName("username");
 
             entity.HasOne(d => d.Role).WithMany(p => p.Users)
                 .HasForeignKey(d => d.RoleId)
@@ -249,7 +291,7 @@ public partial class MySocietyDbContext : DbContext
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("deleted_at");
             entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
-            entity.Property(e => e.HouseId).HasColumnName("house_id");
+            entity.Property(e => e.HouseMappingId).HasColumnName("house_mapping_id");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.UserHouseMappingCreatedByNavigations)
@@ -257,10 +299,10 @@ public partial class MySocietyDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("UserHouseMapping_created_by_fkey");
 
-            entity.HasOne(d => d.House).WithMany(p => p.UserHouseMappings)
-                .HasForeignKey(d => d.HouseId)
+            entity.HasOne(d => d.HouseMapping).WithMany(p => p.UserHouseMappings)
+                .HasForeignKey(d => d.HouseMappingId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("UserHouseMapping_house_id_fkey");
+                .HasConstraintName("UserHouseMapping_house_mapping_id_fkey");
 
             entity.HasOne(d => d.User).WithMany(p => p.UserHouseMappingUsers)
                 .HasForeignKey(d => d.UserId)

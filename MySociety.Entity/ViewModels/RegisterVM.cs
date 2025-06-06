@@ -33,5 +33,10 @@ public class RegisterVM
     public int FloorId { get; set; } = 0;
     public IEnumerable<Floor> Floors { get; set; } = new List<Floor>();
 
-    public string HouseNumber { get; set; } = "";
+    public int HouseId { get; set; } = 0;
+    public IEnumerable<House> Houses { get; set; } = new List<House>();
+
+    public string BlockName { get; set; } = "";
+    public string FloorName { get; set; } = "";
+    public string HouseName { get; set; } = "";
 }

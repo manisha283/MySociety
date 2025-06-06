@@ -9,7 +9,7 @@ public partial class UserHouseMapping
 
     public int UserId { get; set; }
 
-    public int HouseId { get; set; }
+    public int HouseMappingId { get; set; }
 
     public DateTime CreatedAt { get; set; }
 
@@ -21,7 +21,7 @@ public partial class UserHouseMapping
 
     public virtual User CreatedByNavigation { get; set; } = null!;
 
-    public virtual House House { get; set; } = null!;
+    public virtual HouseMapping HouseMapping { get; set; } = null!;
 
     public virtual User User { get; set; } = null!;
 }

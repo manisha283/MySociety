@@ -12,12 +12,15 @@ public class AuthController : Controller
     private readonly IAuthService _authService;
     private readonly IBlockService _blockService;
     private readonly IRoleService _roleService;
+    private readonly IUserService _userService;
 
-    public AuthController(IAuthService authService, IBlockService blockService, IRoleService roleService)
+    public AuthController(IAuthService authService, IBlockService blockService, IRoleService roleService, IUserService userService)
     {
         _authService = authService;
         _blockService = blockService;
         _roleService = roleService;
+        _userService = userService;
+
     }
 
     #region  Login
@@ -58,10 +61,7 @@ public class AuthController : Controller
                 Secure = true
             };
 
-            // HttpContext.Session.SetString("email", loginVM.Email);
-
             Response.Cookies.Append("mySocietyAuthToken", loginResult.Token!, options);
-            Response.Cookies.Append("mySocietyUserName", loginResult.UserName, options);
             Response.Cookies.Append("mySocietyProfileImg", loginResult.ImageUrl ?? Images.ProfileImg, options);
 
             if (loginVM.RememberMe)
@@ -85,19 +85,34 @@ public class AuthController : Controller
         RegisterVM registerVM = new()
         {
             Roles = _roleService.List(),
-            Blocks = await _blockService.Get()
+            Blocks = await _blockService.List()
         };
         return View(registerVM);
     }
 
     [HttpPost]
-    public IActionResult Register(RegisterVM registerVM)
+    public async Task<IActionResult> Register(RegisterVM registerVM)
     {
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
         {
-            return View();
+            TempData["NotificationMessage"] = NotificationMessages.ModelStateInvalid;
+            TempData["NotificationType"] = NotificationType.Error.ToString();
+            return RedirectToAction("Register");
         }
-        return Json(new{});
+
+        ResponseVM response = await _authService.Register(registerVM);
+
+        TempData["NotificationMessage"] = response.Message;
+        if (response.Success)
+        {
+            TempData["NotificationType"] = NotificationType.Success.ToString();
+            return RedirectToAction("Login", "Auth");
+        }
+        else
+        {
+            TempData["NotificationType"] = NotificationType.Error.ToString();
+            return RedirectToAction("Register","Auth");
+        }
     }
     #endregion Register
 
