@@ -69,7 +69,7 @@ public class AuthController : Controller
                 Response.Cookies.Append("mySocietyEmail", loginVM.Email, options);
             }
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Dashboard");
         }
 
         TempData["NotificationMessage"] = response.Message;
@@ -111,7 +111,7 @@ public class AuthController : Controller
         else
         {
             TempData["NotificationType"] = NotificationType.Error.ToString();
-            return RedirectToAction("Register","Auth");
+            return RedirectToAction("Register", "Auth");
         }
     }
     #endregion Register
@@ -188,6 +188,20 @@ public class AuthController : Controller
         return RedirectToAction("Login", "Auth");
     }
     #endregion Reset Password
+
+    #region Logout
+    public IActionResult Logout()
+    {
+        if (Request.Cookies["mySocietyEmail"] != null)
+        {
+            Response.Cookies.Delete("mySocietyAuthToken");
+            Response.Cookies.Delete("mySocietyEmail");
+            Response.Cookies.Delete("mySocietyProfileImg");
+        }
+        return RedirectToAction("Login", "Auth");
+    }
+
+    #endregion
 
 
 }

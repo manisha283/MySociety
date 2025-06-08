@@ -1,4 +1,7 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using MySociety.Entity.Data;
 using MySociety.Repository.Implementations;
 using MySociety.Repository.Interfaces;
@@ -11,7 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Serilog
 var logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "Logs", "MySociety-log.txt");
- 
+
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Error()
@@ -60,6 +63,51 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IUserHouseMappingService, UserHouseMappingService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
+//Session 
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(1); // Set session timeout
+    options.Cookie.HttpOnly = true; // Ensure session is only accessible via HTTP
+    options.Cookie.IsEssential = true;
+});
+
+//Authentication
+if (string.IsNullOrEmpty(JwtConfig.Key))   // Ensure Key is Not Null or Empty
+{
+    throw new InvalidOperationException("JWT Secret Key is missing in appsettings.json");
+}
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                // Extract token from the "JwtToken" cookie
+                var token = context.Request.Cookies["mySocietyAuthToken"];
+                if (!string.IsNullOrEmpty(token))
+                {
+                    context.Token = token;
+                }
+                return Task.CompletedTask;
+            }
+        };
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = JwtConfig.Issuer,
+            ValidAudience = JwtConfig.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtConfig.Key))
+        };
+    });
+
+
+builder.Services.AddAuthorization();
 #endregion
 
 var app = builder.Build();
@@ -72,16 +120,26 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate");
+    context.Response.Headers.Add("Pragma", "no-cache");
+    context.Response.Headers.Add("Expires", "0");
+
+    await next();
+});
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseSession();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Auth}/{action=Login}/{id?}");
 
 app.Run();
