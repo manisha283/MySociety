@@ -4,47 +4,54 @@ namespace MySociety.Service.Helper;
 
 public static class EmailTemplateHelper
 {
-    public static string EmailTemplate = @"
-                <div style='background-image: linear-gradient(to top, #fff1eb 0%, #bbe5f8 100%);'>
-                    <div style='background-color: #3a6073; color: white; height: 90px; font-size: 40px; font-weight: 600; text-align: center; padding-top: 40px; margin-bottom: 0px;'>MySociety</div>
-                    <div style='font-family:Verdana, Geneva, Tahoma, sans-serif; margin-top: 0px; font-size: 20px; padding: 10px;'>
-                        {0}
-                    </div>
-                </div>";
+    private static string GetTemplateContent(string templateName)
+    {
+        // Navigate to the correct folder relative to your project root
+        // var baseDirectory = AppContext.BaseDirectory;
+        // var templatePath = Path.Combine(baseDirectory, "..", "..", "..", "MySociety.Service", "EmailTemplates", $"{templateName}.html");
+        string templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EmailTemplates", $"{templateName}.html");
+        // string templatePath = Path.Combine(@"M:\Tatvasoft\MySociety\MySociety.Service\EmailTemplates", $"{templateName}.html");
+        if (!File.Exists(templatePath))
+        {
+            throw new FileNotFoundException($"Email template {templateName}.html not found at {templatePath}");
+        }
+        return File.ReadAllText(templatePath);
+    }
 
     public static string ResetPassword(string resetLink)
     {
-        string body = $@"<p>My Society,</p>
-                        <p>Please click <a href='{resetLink}'>here</a> to reset your account password.</p>
-                        <p>If you have any issues, please contact support.</p>
-                        <p><span style='color: orange;'>Important:</span> The link expires in 24 hours.</p>";
-        body = EmailTemplate.Replace("{0}", body);
-        return body;
+        string template = GetTemplateContent("ResetPassword");
+        return template.Replace("{resetLink}", resetLink);
     }
 
     public static string NewPassword(string password)
     {
-        string body = $@"<p>My Society,</p>
-                        <h3>Your Password is : {password}</h3>
-                        <p>If you encounter any issues or have any question, please do not hesitate to contact our support team.</p>";
-        return EmailTemplate.Replace("{0}", body);
+        string template = GetTemplateContent("NewPassword");
+        return template.Replace("{password}", password);
     }
 
     public static string NewUserRegistration(RegisterVM registerVM)
     {
-        string body = $@"<p>My Society - New User Registration</p>
-                     <p>A new user has registered on the system. Below are the details:</p>
-                     <ul>
-                        <li><strong>Name:</strong> {registerVM.Name}</li>
-                        <li><strong>Email:</strong> {registerVM.Email}</li>
-                        <li><strong>Block:</strong> {registerVM.BlockName}</li>
-                        <li><strong>Floor:</strong> {registerVM.FloorName}</li>
-                        <li><strong>House:</strong> {registerVM.HouseName}</li>
-                        <li><strong>Registered On:</strong> {DateTime.Now}</li>
-                     </ul>
-                     <p>Please log in to the admin panel if you wish to take any further action.</p>";
-        body = EmailTemplate.Replace("{0}", body);
-        return body;
+        string template = GetTemplateContent("NewUserRegistration");
+        return template.Replace("{name}", registerVM.Name)
+                      .Replace("{email}", registerVM.Email)
+                      .Replace("{blockName}", registerVM.BlockName)
+                      .Replace("{floorName}", registerVM.FloorName)
+                      .Replace("{houseName}", registerVM.HouseName)
+                      .Replace("{registeredOn}", DateTime.Now.ToString());
     }
 
+    public static string AdminApprovalNotification(string name, string loginUrl)
+    {
+        string template = GetTemplateContent("AdminApprovalNotification");
+        return template.Replace("{name}", name)
+                      .Replace("{loginUrl}", loginUrl);
+    }
+
+    public static string OtpVerification(string otp)
+    {
+        string template = GetTemplateContent("OtpVerification");
+        return template.Replace("{otp}", otp);
+    }
 }
+
