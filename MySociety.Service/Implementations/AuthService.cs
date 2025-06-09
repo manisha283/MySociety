@@ -20,8 +20,9 @@ public class AuthService : IAuthService
     private readonly IHouseMappingService _houseMappingService;
     private readonly IFloorService _floorService;
     private readonly IHouseService _houseService;
+    private readonly IGenericRepository<UserOtp> _userOtpRepository;
 
-    public AuthService(IEmailService emailService, IJwtService jwtService, IGenericRepository<ResetPasswordToken> resetPasswordRepository, IBlockService blockService, IUserService userService, IUserHouseMappingService userHouseMappingService, IHouseMappingService houseMappingService, IFloorService floorService, IHouseService houseService)
+    public AuthService(IEmailService emailService, IJwtService jwtService, IGenericRepository<ResetPasswordToken> resetPasswordRepository, IBlockService blockService, IUserService userService, IUserHouseMappingService userHouseMappingService, IHouseMappingService houseMappingService, IFloorService floorService, IHouseService houseService, IGenericRepository<UserOtp> userOtpRepository)
     {
         _emailService = emailService;
         _jwtService = jwtService;
@@ -32,13 +33,14 @@ public class AuthService : IAuthService
         _houseMappingService = houseMappingService;
         _floorService = floorService;
         _houseService = houseService;
+        _userOtpRepository = userOtpRepository;
 
     }
 
     #region Login
-    public async Task<(LoginResultVM loginResult, ResponseVM response)> Login(LoginVM loginVM)
+
+    public async Task<ResponseVM> VerifyUser(LoginVM loginVM)
     {
-        LoginResultVM loginResultVM = new();
         ResponseVM response = new();
 
         User? user = await _userService.GetByEmail(loginVM.Email);
@@ -59,15 +61,96 @@ public class AuthService : IAuthService
         }
         else
         {
-            string token = await _jwtService.GenerateToken(loginVM.Email);
+            response = await SendOtpEmail(loginVM.Email);
+        }
 
-            loginResultVM.Token = token;
-            loginResultVM.ImageUrl = user.ProfileImg;
+        return response;
+    }
 
-            response.Success = true;
+    public async Task<(LoginResultVM loginResult, ResponseVM response)> Login(LoginVM loginVM)
+    {
+        LoginResultVM loginResultVM = new();
+        ResponseVM response = new();
+
+        User? user = await _userService.GetByEmail(loginVM.Email);
+        if (user == null)
+        {
+            response.Success = false;
+            response.Message = NotificationMessages.NotFound.Replace("{0}", "User");
+        }
+        else
+        {
+            response = await VerifyOtp(user.Id, loginVM.OtpCode);
+            if (response.Success)
+            {
+                string token = await _jwtService.GenerateToken(loginVM.Email);
+
+                loginResultVM.Token = token;
+                loginResultVM.ImageUrl = user.ProfileImg;
+
+                response.Success = true;
+            }
         }
         return (loginResultVM, response);
     }
+
+    private async Task<ResponseVM> VerifyOtp(int userId, string otpCode)
+    {
+        ResponseVM response = new();
+        UserOtp? userOtp = _userOtpRepository.GetByCondition(u => !u.IsUsed && u.UserId == userId && u.OtpCode == otpCode).Result.LastOrDefault();
+        if (userOtp == null)
+        {
+            response.Success = false;
+            response.Message = NotificationMessages.Invalid.Replace("{0}", "OTP");
+        }
+        else if (userOtp.ExpiryTime.Subtract(DateTime.Now).Ticks <= 0)
+        {
+            response.Success = false;
+            response.Message = NotificationMessages.LinkExpired;
+        }
+        else
+        {
+            userOtp.IsUsed = true;
+            await _userOtpRepository.UpdateAsync(userOtp);
+
+            response.Success = true;
+        }
+        return response;
+    }
+
+    private async Task<ResponseVM> SendOtpEmail(string email)
+    {
+        ResponseVM response = new();
+
+        Random generator = new();
+        string otpCode = generator.Next(0, 1000000).ToString("D6");
+
+        User user = await _userService.GetByEmail(email) ?? throw new NotFoundException(NotificationMessages.NotFound.Replace("{0}", otpCode));
+
+        UserOtp userOtp = new()
+        {
+            UserId = user.Id,
+            OtpCode = otpCode
+        };
+
+        await _userOtpRepository.AddAsync(userOtp);
+
+        //Sending otp to user
+        string body = EmailTemplateHelper.OtpVerification(otpCode);
+        if (await _emailService.SendEmail(email, "OTP Verification", body))
+        {
+            response.Success = true;
+            response.Message = NotificationMessages.EmailSent;
+        }
+        else
+        {
+            response.Success = false;
+            response.Message = NotificationMessages.EmailSendingFailed;
+        }
+
+        return response;
+    }
+
     #endregion
 
     #region ForgotPassword
@@ -174,7 +257,7 @@ public class AuthService : IAuthService
 
             //Sending email to user for resetting password
             string body = EmailTemplateHelper.NewUserRegistration(registerVM);
-            if (await _emailService.SendEmail(EmailConfig.AdminEmail, "Reset Password", body))
+            if (await _emailService.SendEmail(EmailConfig.AdminEmail, "New User Registered", body))
             {
                 response.Success = true;
                 response.Message = NotificationMessages.EmailSent;

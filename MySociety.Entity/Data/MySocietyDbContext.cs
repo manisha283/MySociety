@@ -32,6 +32,8 @@ public partial class MySocietyDbContext : DbContext
 
     public virtual DbSet<UserHouseMapping> UserHouseMappings { get; set; }
 
+    public virtual DbSet<UserOtp> UserOtps { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseNpgsql("Name=ConnectionStrings:DbConnection");
 
@@ -308,6 +310,29 @@ public partial class MySocietyDbContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("UserHouseMapping_user_id_fkey");
+        });
+
+        modelBuilder.Entity<UserOtp>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("UserOtp_pkey");
+
+            entity.ToTable("UserOtp");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ExpiryTime)
+                .HasDefaultValueSql("(CURRENT_TIMESTAMP + '00:10:00'::interval)")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("expiry_time");
+            entity.Property(e => e.IsUsed).HasColumnName("is_used");
+            entity.Property(e => e.OtpCode)
+                .HasMaxLength(8)
+                .HasColumnName("otp_code");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.HasOne(d => d.User).WithMany(p => p.UserOtps)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("UserOtp_user_id_fkey");
         });
 
         OnModelCreatingPartial(modelBuilder);

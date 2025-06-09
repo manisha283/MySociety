@@ -6,6 +6,7 @@ using MySociety.Entity.Data;
 using MySociety.Repository.Implementations;
 using MySociety.Repository.Interfaces;
 using MySociety.Service.Configuration;
+using MySociety.Service.Helper;
 using MySociety.Service.Implementations;
 using MySociety.Service.Interfaces;
 using Serilog;

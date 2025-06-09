@@ -8,7 +8,7 @@ public class NotificationMessages
     public const string Deleted = "{0} has been deleted successfully!";
 
 
-    public const string TryAgain = "Please try again!";
+    public const string TryAgain = " Please try again!";
     public const string AlreadyExisted = "{0} already existed!" + TryAgain;
     public const string NotFound = "{0} not found!" + TryAgain;
     public const string Invalid = "Invalid {0}!" + TryAgain;

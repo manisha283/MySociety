@@ -6,51 +6,85 @@
     Layout = "_LoginLayout";
 }
 
-<form asp-controller="Auth" asp-action="Login">
-    <!-- Email -->
-    <div class="mb-4">
-        <div class="input-group">
-            <input asp-for="Email" class="form-control login-input p-2" id="inputEmail" placeholder=" Email*" required>
-            <span class="input-group-text">
-                <img src="/images/icons/envelope.svg" width="20px">
-            </span>
+<form id="loginForm" method="post">
+
+    @if (Model.LoginEnable)
+    {
+        <input asp-for="RememberMe" hidden/>
+        <input asp-for="Email" hidden/>
+        <input asp-for="LoginEnable" hidden/>
+
+        <div class="mb-4">
+            <input asp-for="OtpCode" class="form-control p-2" id="inputOtp" placeholder="Enter OTP*">
+            <span asp-validation-for="OtpCode" class="text-danger d-flex justify-content-start"></span>
         </div>
-        <span asp-validation-for="Email" class="text-danger d-flex justify-content-start"></span>
-    </div>
 
-    <!-- Password -->
-    <div class="mb-4">
-        <div class="input-group">
-            <input asp-for="Password" type="password" class="form-control login-input p-2" id="inputPassword"
-                placeholder=" Password*">
-            <span class="input-group-text">
-                <i class="eye-icon fa fa-eye-slash cursor-pointer" onclick="togglePassword('inputPassword', this)"></i>
-            </span>
+        <div class="mb-3 ">
+            <button type="submit" onclick="setAction('Login')" class="btn btn-custom w-100">Submit</button>
         </div>
-        <span asp-validation-for="Password" class="text-danger d-flex justify-content-start"></span>
-    </div>
-
-
-    <!--Remember me and Forget Password-->
-    <div class="mb-4 d-flex justify-content-between">
-        <div class="form-group">
-            <div>
-                <input asp-for="RememberMe" type="checkbox" class="form-check-input" />
-                <label asp-for="RememberMe">
-                    Remember Me
-                </label>
+        <div>
+            <a asp-action="Login" asp-controller="Auth">Back to Login</a>
+        </div>
+    }
+    else
+    {
+         <!-- Email -->
+        <div class="mb-4">
+            <div class="input-group">
+                <input asp-for="Email" class="form-control p-2" id="inputEmail" placeholder=" Email*">
+                <span class="input-group-text">
+                    <img src="/images/icons/envelope.svg" width="20px">
+                </span>
             </div>
+            <span asp-validation-for="Email" class="text-danger d-flex justify-content-start"></span>
         </div>
-        <a asp-action="ForgotPassword" asp-controller="Auth">Forgot Password?</a>
-    </div>
 
-    <div class="mb-3">
-        <button type="submit" class="btn btn-custom w-100">Login</button>
-    </div>
+        <!-- Password -->
+        <div class="mb-4">
+            <div class="input-group">
+                <input asp-for="Password" type="password" class="form-control p-2" id="inputPassword"
+                    placeholder=" Password*">
+                <span class="input-group-text">
+                    <i class="eye-icon fa fa-eye-slash cursor-pointer" onclick="togglePassword('inputPassword', this)"></i>
+                </span>
+            </div>
+            <span asp-validation-for="Password" class="text-danger d-flex justify-content-start"></span>
+        </div>
+    
+        <!--Remember me and Forget Password-->
+        <div class="mb-4 d-flex justify-content-between">
+            <div class="form-group">
+                <div>
+                    <input asp-for="RememberMe" type="checkbox" class="form-check-input" />
+                    <label asp-for="RememberMe">
+                        Remember Me
+                    </label>
+                </div>
+            </div>
 
-    <div>
-        <span>Don't have an account?</span>
-        <a asp-action="Register" asp-controller="Auth">Sign up</a>
-    </div>
+            <a asp-action="ForgotPassword" asp-controller="Auth">Forgot Password?</a>
+        </div>
+    
+        <!-- Verify OTP -->
+        <div class="mb-3">
+            <button type="submit" onclick="setAction('SendOtp')" class="btn btn-custom w-100">Login</button>
+        </div>
+        <div>
+            <span>Don't have an account?</span>
+            <a asp-action="Register" asp-controller="Auth">Sign up</a>
+        </div>
+    }
 
 </form>
+
+@section Scripts {
+
+    <script>
+
+        function setAction(action) {
+            const form = document.getElementById('loginForm');
+            form.action = `/Auth/${action}`;
+        }
+
+    </script>
+}

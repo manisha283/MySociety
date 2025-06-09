@@ -1,27 +1,30 @@
 using MySociety.Entity.ViewModels;
+using MySociety.Service.Common;
 
 namespace MySociety.Service.Helper;
 
 public static class EmailTemplateHelper
 {
-    private static string GetTemplateContent(string templateName)
+    public static string GetTemplateContent(string templateName)
     {
-        // Navigate to the correct folder relative to your project root
-        // var baseDirectory = AppContext.BaseDirectory;
-        // var templatePath = Path.Combine(baseDirectory, "..", "..", "..", "MySociety.Service", "EmailTemplates", $"{templateName}.html");
-        string templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EmailTemplates", $"{templateName}.html");
-        // string templatePath = Path.Combine(@"M:\Tatvasoft\MySociety\MySociety.Service\EmailTemplates", $"{templateName}.html");
-        if (!File.Exists(templatePath))
+        string filePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "EmailTemplates", $"{templateName}.html");
+        if (!File.Exists(filePath))
         {
-            throw new FileNotFoundException($"Email template {templateName}.html not found at {templatePath}");
+            throw new FileNotFoundException($"Email template {templateName}.html not found at {filePath}");
         }
-        return File.ReadAllText(templatePath);
+        string baseTemplatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "EmailTemplates", "BaseTemplate.html");
+        var baseTemplate = File.ReadAllText(baseTemplatePath);
+
+        return baseTemplate.Replace("{content}", File.ReadAllText(filePath));
+
+        // return File.ReadAllText(filePath);
     }
 
     public static string ResetPassword(string resetLink)
     {
         string template = GetTemplateContent("ResetPassword");
         return template.Replace("{resetLink}", resetLink);
+
     }
 
     public static string NewPassword(string password)
@@ -41,17 +44,16 @@ public static class EmailTemplateHelper
                       .Replace("{registeredOn}", DateTime.Now.ToString());
     }
 
-    public static string AdminApprovalNotification(string name, string loginUrl)
+    public static string AdminApprovalNotification(string name)
     {
         string template = GetTemplateContent("AdminApprovalNotification");
         return template.Replace("{name}", name)
-                      .Replace("{loginUrl}", loginUrl);
+                      .Replace("{loginUrl}", CommonUrls.LoginUrl);
     }
 
     public static string OtpVerification(string otp)
-    {
+   {
         string template = GetTemplateContent("OtpVerification");
         return template.Replace("{otp}", otp);
     }
 }
-

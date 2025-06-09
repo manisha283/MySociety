@@ -56,4 +56,6 @@ public partial class User
     public virtual ICollection<UserHouseMapping> UserHouseMappingCreatedByNavigations { get; set; } = new List<UserHouseMapping>();
 
     public virtual ICollection<UserHouseMapping> UserHouseMappingUsers { get; set; } = new List<UserHouseMapping>();
+
+    public virtual ICollection<UserOtp> UserOtps { get; set; } = new List<UserOtp>();
 }

@@ -31,15 +31,38 @@ public class AuthController : Controller
         {
             return RedirectToAction("Index", "Home");
         }
-        return View();
+        return View(new LoginVM());
     }
+
+    [HttpPost]
+    public async Task<IActionResult> SendOtp(LoginVM loginVM)
+    {
+        ModelState.Remove("OtpCode");
+        if (!ModelState.IsValid)
+        {
+            return View("Login", loginVM);
+        }
+        ResponseVM response = await _authService.VerifyUser(loginVM);
+        if (response.Success)
+        {
+            loginVM.LoginEnable = true;
+        }
+        else
+        {
+            TempData["NotificationMessage"] = response.Message;
+            TempData["NotificationType"] = NotificationType.Error.ToString();
+        }
+        return View("Login", loginVM);
+    }
+
 
     [HttpPost]
     public async Task<IActionResult> Login(LoginVM loginVM)
     {
+        ModelState.Remove("Password");
         if (!ModelState.IsValid)
         {
-            return View(loginVM);
+            return View("Login", loginVM);
         }
 
         (LoginResultVM loginResult, ResponseVM response) = await _authService.Login(loginVM);
@@ -48,7 +71,7 @@ public class AuthController : Controller
         {
             TempData["NotificationMessage"] = response.Message;
             TempData["NotificationType"] = NotificationType.Error.ToString();
-            return View(loginVM);
+            return View("Login", loginVM);
         }
 
         if (loginResult.Token != null || loginResult.Token != "")
@@ -69,7 +92,7 @@ public class AuthController : Controller
                 Response.Cookies.Append("mySocietyEmail", loginVM.Email, options);
             }
 
-            return RedirectToAction("Index", "Dashboard");
+            return RedirectToAction("Index", "Home");
         }
 
         TempData["NotificationMessage"] = response.Message;
@@ -192,12 +215,10 @@ public class AuthController : Controller
     #region Logout
     public IActionResult Logout()
     {
-        if (Request.Cookies["mySocietyEmail"] != null)
-        {
-            Response.Cookies.Delete("mySocietyAuthToken");
-            Response.Cookies.Delete("mySocietyEmail");
-            Response.Cookies.Delete("mySocietyProfileImg");
-        }
+        Response.Cookies.Delete("mySocietyAuthToken");
+        Response.Cookies.Delete("mySocietyEmail");
+        Response.Cookies.Delete("mySocietyProfileImg");
+
         return RedirectToAction("Login", "Auth");
     }
 
