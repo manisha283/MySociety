@@ -9,6 +9,7 @@ using MySociety.Service.Configuration;
 using MySociety.Service.Helper;
 using MySociety.Service.Implementations;
 using MySociety.Service.Interfaces;
+using MySociety.Web.Middlewares;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -135,6 +136,9 @@ app.UseStaticFiles();
 
 app.UseRouting();
 app.UseSession();
+
+app.UseStatusCodePagesWithReExecute("/Auth/Error/{0}");
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

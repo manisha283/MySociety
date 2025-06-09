@@ -2,6 +2,7 @@ namespace MySociety.Entity.ViewModels;
 
 public class ApproveUserVM
 {
+    public int UserId { get; set; } = 0;
     public string Email { get; set; } = "";
     public string Name { get; set; } = "";
     public string Block { get; set; } = "";

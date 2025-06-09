@@ -4,6 +4,7 @@ using MySociety.Entity.ViewModels;
 using MySociety.Service.Common;
 using MySociety.Service.Exceptions;
 using MySociety.Service.Interfaces;
+using MySociety.Web.Models;
 
 namespace MySociety.Web.Controllers;
 
@@ -220,6 +221,54 @@ public class AuthController : Controller
         Response.Cookies.Delete("mySocietyProfileImg");
 
         return RedirectToAction("Login", "Auth");
+    }
+
+    #endregion
+
+    #region Error
+
+    [Route("/Auth/Error/{code}")]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult Error(int code)
+    {
+        string title = code switch
+        {
+            401 => "Unauthorized",
+            403 => "Forbidden",
+            404 => "Page Not Found",
+            _ => "Internal Server Error"
+        };
+
+        string message = code switch
+        {
+            401 => "You are not authorized to view this page.",
+            403 => "Access to this page is forbidden.",
+            404 => "The page you are looking for does not exist.",
+            _ => "An unexpected error has occurred. Please try again later."
+        };
+
+        var errorModel = new ErrorViewModel
+        {
+            StatusCode = code,
+            Title = title,
+            Message = message
+        };
+
+        return View("Error", errorModel);
+    }
+
+    public IActionResult HandleErrorWithToast(string message)
+    {
+        TempData["ToastError"] = message;
+
+        string referer = Request.Headers["Referer"].ToString();
+
+        if (string.IsNullOrEmpty(referer))
+        {
+            referer = Url.Action("Login", "Auth") ?? "/"; // or any safe fallback page
+        }
+
+        return Redirect(referer);
     }
 
     #endregion

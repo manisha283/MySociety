@@ -19,31 +19,11 @@ html {
   min-height: 100%;
 }
 
-/* body {
-  margin-bottom: 60px;
-  font-family: "Ancizar Sans", sans-serif !important;
-  background-image: linear-gradient(to top, #fff1eb 0%, #bbe5f8 100%);
-  min-height: 100vh;
-  color: #333;
+.btn-delete{
+  background-color: lightcoral !important;
 }
 
-.bg-custom{
-  background-color: rgba(255, 255, 255, 0.6);
-} */
-
-
-
-
-
-/* css */
-
-/* .bg-custom{
-  background-image: linear-gradient(to top, #fff1eb 0%, #bbe5f8 100%);
+.btn-approve{
+  background-color: lightgreen !important;
 }
-
-.btn-custom{
-  color: white !important;
-  background-color: #3a6073   !important;
-  border: 1px solid #3a6073  ;
-} */
 

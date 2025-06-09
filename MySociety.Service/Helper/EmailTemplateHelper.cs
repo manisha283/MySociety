@@ -8,16 +8,14 @@ public static class EmailTemplateHelper
     public static string GetTemplateContent(string templateName)
     {
         string filePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "EmailTemplates", $"{templateName}.html");
-        if (!File.Exists(filePath))
+        string baseTemplatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "EmailTemplates", "BaseTemplate.html");
+        if (!File.Exists(filePath) && !File.Exists(baseTemplatePath))
         {
             throw new FileNotFoundException($"Email template {templateName}.html not found at {filePath}");
         }
-        string baseTemplatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "EmailTemplates", "BaseTemplate.html");
         var baseTemplate = File.ReadAllText(baseTemplatePath);
 
         return baseTemplate.Replace("{content}", File.ReadAllText(filePath));
-
-        // return File.ReadAllText(filePath);
     }
 
     public static string ResetPassword(string resetLink)

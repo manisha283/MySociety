@@ -1,4 +1,5 @@
-@* 
+@using MySociety.Entity.ViewModels
+@* @model ApprovalListVM *@
 
 <!-- Table -->
 <div class="table-responsive">
@@ -15,7 +16,6 @@
                     </button>
                 </th>
                 <th scope="col" class="col">Email</th>
-                <th scope="col" class="col">Phone</th>
                 <th scope="col" class="col">Block</th>
                 <th scope="col" class="col">Floor</th>
                 <th scope="col" class="col">House</th>
@@ -24,48 +24,67 @@
                     <button class="btn p-0 sortBtn" data-column="Role" data-order="asc">
                         <img src="~/images/icons/arrow-up.svg" alt="">
                     </button>
-                    <button class="btn p-0 sortBtn" data-column="Role" data-order="desc">
-                        <img src="~/images/icons/arrow-down.svg" alt="">
+
+                    <img src="~/images/icons/arrow-down.svg" alt="">
                     </button>
                 </th>
-                <th scope="col" class="col-1">Action</th>
+                <th scope="col" class="col">Action</th>
             </tr>
         </thead>
         <tbody class="table-group-divider">
-            @foreach (UserInfoViewModel? user in Model.Users)
+            <tr>
+                <td scope="row">
+                    <img src="~/images/profile.png" alt="" width="35px" height="35px" class="rounded-circle">
+                    <span>Manisha Patel</span>
+                </td>
+                <td>manisha@gmail.com</td>
+                <td>A</td>
+                <td>First</td>
+                <td>101</td>
+                <td>Owner</td>
+                <td>
+                    <a type="button" asp-action="ApproveUser" asp-controller="Users" asp-route-userId="0"
+                        class="px-3 btn btn-approve">
+                        Approve
+                    </a>
+
+                    <a type="button" class="px-3 btn btn-delete deleteIcon" id="deleteIcon" data-bs-toggle="modal"
+                        data-bs-target="#deleteModal" data-id="0">
+                        Delete
+                    </a>
+                </td>
+            </tr>
+            @* @foreach (var user in Model.Users)
             {
                 <tr>
                     <td scope="row">
-                        <img src="@user.ProfileImageUrl" alt="" width="35px" height="35px" class="rounded-circle">
-                        <span>@user.FirstName @user.LastName</span>
+                        <img src="~/images/profile.png" alt="" width="35px" height="35px" class="rounded-circle">
+                        <span>@user.Name</span>
                     </td>
                     <td>@user.Email</td>
-                    <td>@user.Phone</td>
-                    <td>@user.Role</td>
+                    <td>@user.Block</td>
+                    <td>@user.Floor</td>
+                    <td>@user.House</td>
                     <td>
-                        <span class="@(user.Status == true ? "bg-active" : "bg-inactive")">@(user.Status == true ? "Active"
-                                                    : "Inactive")</span>
-                </td>
-                <td>
 
                         <a asp-action="Edit" asp-controller="Users" asp-route-userId="@user.UserId"
-                            class="ps-0 btn @(user.Role == "Admin" || !permissions.Contains("Edit_Users") ? "a-disabled" : "")">
+                            class="ps-0 btn" >
                             <img src="~/images/icons/edit.svg" alt="" />
                         </a>
 
                         <a type="button"
-                            class="btn deleteIcon @(user.Role == "Admin" || !permissions.Contains("Edit_Users") ? "a-disabled" : "")"
+                            class="btn deleteIcon 
                             id="deleteIcon" data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="@user.UserId">
-                            <img src="~/images/icons/delete.svg" alt="">
+                            <img src="~/images/icons/delete.svg" alt="" />
                         </a>
                     </td>
                 </tr>
-                        }
+                        } *@
         </tbody>
     </table>
 </div>
 
-<!-- Pagination Starts -->
+@* <!-- Pagination Starts -->
 <div class="d-flex justify-content-end gap-1 flex-column flex-md-row pb-2">
     <div class="d-flex flex-row justify-content-end align-items-center mb-1 me-1 gap-1">
         <span>Items per page:</span>

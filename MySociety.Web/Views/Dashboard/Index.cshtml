@@ -3,27 +3,8 @@
     Layout = "_Layout";
 }
 
-<!-- User heading, search and add button -->
-<div class="d-flex flex-column flex-sm-row justify-content-between mb-3 ">
-    <div>
-        <h1 class="blue-text">Registered Member waiting for approval</h1>
-    </div>
-    <div class="justify-content-end d-flex align-items-center">
-        <div class="me-2">
-            <div class="input-group">
-                <input type="search" class="form-control" placeholder="Search" name="search" id="searchQuery" oninput="PaginationAjax(1)">
-                <button type="submit" class="input-group-text"> 
-                    <img src="~/images/icons/search.svg" alt=""> 
-                </button>
-                
-            </div>
-        </div>
-        @* <div>
-            <a asp-action="Add" asp-controller="Users" class="btn btn-blue text-nowrap">
-                + Add users
-            </a>
-        </div> *@
-    </div>
+<div>
+    <h1 class="blue-text">Approval List</h1>
 </div>
 
 <!-- Table -->
@@ -53,7 +34,7 @@
 </div>
 
 @section Scripts {
-    <script>
+    @* <script>
         $(document).ready(function () {
             PaginationAjax(1); // Load users on page load
         });
@@ -90,6 +71,28 @@
                 }
             });
         }
+    </script> *@
+
+    <script>
+        $(document).ready(function () {
+            userList();
+        });
+
+        function userList()
+        {
+            $.ajax({
+                url: "/Dashboard/UserList",
+                type: "GET",
+                dataType: "html",
+                success: function (data) {
+                    $("#tableContent").html(data);
+                },
+                error: function () {
+                    console.log("No Users Found");
+                    $("#tableContent").html('An error has occurred');
+                }
+            });
+        }
     </script>
 
     @* Delete User*@
@@ -109,7 +112,7 @@
                         toastr.success(response.message);
                         PaginationAjax(1);
                     }
-                    else{
+                    else {
                         toastr.error(response.message)
                     }
                 },
