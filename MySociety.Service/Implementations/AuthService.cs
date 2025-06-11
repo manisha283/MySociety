@@ -97,7 +97,12 @@ public class AuthService : IAuthService
     private async Task<ResponseVM> VerifyOtp(int userId, string otpCode)
     {
         ResponseVM response = new();
-        UserOtp? userOtp = _userOtpRepository.GetByCondition(u => !u.IsUsed && u.UserId == userId && u.OtpCode == otpCode).Result.LastOrDefault();
+
+        UserOtp? userOtp = await _userOtpRepository.GetByStringAsync(
+            predicate: u => !u.IsUsed && u.UserId == userId && u.OtpCode == otpCode,
+            orderBy: q => q.OrderBy(u => u.Id),
+            firstRecord: false);
+
         if (userOtp == null)
         {
             response.Success = false;
@@ -257,6 +262,7 @@ public class AuthService : IAuthService
 
             //Sending email to user for resetting password
             string body = EmailTemplateHelper.NewUserRegistration(registerVM);
+
             if (await _emailService.SendEmail(EmailConfig.AdminEmail, "New User Registered", body))
             {
                 response.Success = true;

@@ -58,4 +58,10 @@ public partial class User
     public virtual ICollection<UserHouseMapping> UserHouseMappingUsers { get; set; } = new List<UserHouseMapping>();
 
     public virtual ICollection<UserOtp> UserOtps { get; set; } = new List<UserOtp>();
+
+    public virtual ICollection<Vehicle> VehicleCreatedByNavigations { get; set; } = new List<Vehicle>();
+
+    public virtual ICollection<Vehicle> VehicleUpdatedByNavigations { get; set; } = new List<Vehicle>();
+
+    public virtual ICollection<Vehicle> VehicleUsers { get; set; } = new List<Vehicle>();
 }

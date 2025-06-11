@@ -23,5 +23,7 @@ public class NotificationMessages
     public const string EmailSendingFailed = "Failed to send the email." + TryAgain;
     public const string UserNotApproved = "User is not approved! Please wait for approval.";
     public const string UserNotActive = "User is not an Active member of society";
-    public const string UserRegistered = "Registration done Successfully! Wait for the admin approval.";
+    public const string UserRegistered = "Registration done successfully! Wait for the admin approval.";
+
+    public const string UserApproved = "User has been approved successfully!";
 }

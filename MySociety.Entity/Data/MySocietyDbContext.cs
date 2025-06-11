@@ -34,6 +34,10 @@ public partial class MySocietyDbContext : DbContext
 
     public virtual DbSet<UserOtp> UserOtps { get; set; }
 
+    public virtual DbSet<Vehicle> Vehicles { get; set; }
+
+    public virtual DbSet<VehicleType> VehicleTypes { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseNpgsql("Name=ConnectionStrings:DbConnection");
 
@@ -333,6 +337,67 @@ public partial class MySocietyDbContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("UserOtp_user_id_fkey");
+        });
+
+        modelBuilder.Entity<Vehicle>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("Vehicles_pkey");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.DeletedAt)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("deleted_at");
+            entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .HasColumnName("name");
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("updated_at");
+            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.VehicleNumber)
+                .HasMaxLength(15)
+                .HasColumnName("vehicle_number");
+            entity.Property(e => e.VehicleTypeId).HasColumnName("vehicle_type_id");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.VehicleCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("Vehicles_created_by_fkey");
+
+            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.VehicleUpdatedByNavigations)
+                .HasForeignKey(d => d.UpdatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("Vehicles_updated_by_fkey");
+
+            entity.HasOne(d => d.User).WithMany(p => p.VehicleUsers)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("Vehicles_user_id_fkey");
+
+            entity.HasOne(d => d.VehicleType).WithMany(p => p.Vehicles)
+                .HasForeignKey(d => d.VehicleTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("Vehicles_vehicle_type_id_fkey");
+        });
+
+        modelBuilder.Entity<VehicleType>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("VehicleType_pkey");
+
+            entity.ToTable("VehicleType");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name)
+                .HasMaxLength(50)
+                .HasColumnName("name");
         });
 
         OnModelCreatingPartial(modelBuilder);

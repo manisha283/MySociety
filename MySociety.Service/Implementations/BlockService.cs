@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using MySociety.Entity.HelperModels;
 using MySociety.Entity.Models;
 using MySociety.Repository.Interfaces;
 using MySociety.Service.Interfaces;
@@ -16,11 +17,11 @@ public class BlockService : IBlockService
 
     public async Task<IEnumerable<Block>> List()
     {
-        IEnumerable<Block> list = await _blockRepository.GetByCondition(
+        DbResult<Block> result = await _blockRepository.GetRecords(
             b => b.DeletedBy == null
         );
 
-        return list;
+        return result.Records;
     }
 
     public async Task<int> GetNumberOfFloors(int blockId)

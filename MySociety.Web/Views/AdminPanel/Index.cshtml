@@ -3,12 +3,22 @@
     Layout = "_Layout";
 }
 
-<div>
-    <h1 class="blue-text">Approval List</h1>
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="blue-text text-nowrap">Approval List</h1>
+    </div>
+    <div>
+        <div class="input-group">
+            <input type="search" class="form-control" placeholder="Search" name="search" id="searchQuery"
+                oninput="PaginationAjax(1)">
+            <button type="submit" class="input-group-text">
+                <img src="~/images/icons/search.svg" alt="">
+            </button>
+        </div>
+    </div>
 </div>
-
 <!-- Table -->
-<div class="bg-white px-3" id="tableContent">
+<div class="bg-custom px-3" id="tableContent">
     <!-- Partial View -->
 </div>
 
@@ -26,15 +36,16 @@
                 <span>Are you sure you want to delete this user?</span>
             </div>
             <div class="modal-footer d-flex justify-content-center">
-                <button id="confirmDelete" type="button" class="btn btn-blue" data-bs-dismiss="modal">Yes</button>
-                <button type="button" class="btn btn-white" data-bs-dismiss="modal">No</button>
+                <button id="confirmDelete" type="button" class="btn btn-custom" data-bs-dismiss="modal">Yes</button>
+                <button type="button" class="btn btn-custom-secondary" data-bs-dismiss="modal">No</button>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    @* <script>
+
+    <script>
         $(document).ready(function () {
             PaginationAjax(1); // Load users on page load
         });
@@ -58,7 +69,7 @@
             };
 
             $.ajax({
-                url: "/Users/GetList",
+                url: "/AdminPanel/UserList",
                 data: { filter },
                 type: "POST",
                 dataType: "html",
@@ -71,27 +82,29 @@
                 }
             });
         }
-    </script> *@
+    </script>
 
+    @* Approve User*@
     <script>
-        $(document).ready(function () {
-            userList();
-        });
-
-        function userList()
-        {
+        function approveUser(userId) {
+            console.log("approveUser and user is", userId);
             $.ajax({
-                url: "/Dashboard/UserList",
-                type: "GET",
-                dataType: "html",
-                success: function (data) {
-                    $("#tableContent").html(data);
+                url: '@Url.Action("ApproveUser", "AdminPanel")',
+                type: "POST",
+                data: { userId: userId },
+                success: function (response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        userList();
+                    }
+                    else {
+                        toastr.error(response.message)
+                    }
                 },
                 error: function () {
-                    console.log("No Users Found");
-                    $("#tableContent").html('An error has occurred');
+                    console.log("User not approved!");
                 }
-            });
+            })
         }
     </script>
 
@@ -104,13 +117,13 @@
 
         $(document).on("click", "#confirmDelete", function () {
             $.ajax({
-                url: '@Url.Action("Delete", "Users")',
+                url: '@Url.Action("DeleteUser", "AdminPanel")',
                 type: "POST",
-                data: { id: userId },
+                data: { userId: userId },
                 success: function (response) {
                     if (response.success) {
                         toastr.success(response.message);
-                        PaginationAjax(1);
+                        userList();
                     }
                     else {
                         toastr.error(response.message)

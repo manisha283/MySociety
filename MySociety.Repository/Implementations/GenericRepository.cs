@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using MySociety.Entity.Data;
+using MySociety.Entity.HelperModels;
 using MySociety.Repository.Interfaces;
 
 namespace MySociety.Repository.Implementations;
@@ -17,7 +18,6 @@ public class GenericRepository<T> : IGenericRepository<T>
         _dbSet = context.Set<T>();
     }
 
-    #region C : Create
     /*------------------------------adds a new entity (record) to the database----------------------------------------
     -------------------------------------------------------------------------------------------------------*/
     public async Task AddAsync(T entity)
@@ -33,9 +33,6 @@ public class GenericRepository<T> : IGenericRepository<T>
 
         return typeof(T).GetProperty("Id")?.GetValue(entity) is int id ? id : 0;
     }
-    #endregion C : Create
-
-    #region R : Read
 
     /*----------------------retrieves a single record from the database by its primary key (id)----------------------------------------
     -------------------------------------------------------------------------------------------------------*/
@@ -46,34 +43,67 @@ public class GenericRepository<T> : IGenericRepository<T>
 
     /*----------------------fetches a single record from the database based on a given condition----------------------------------------
     -------------------------------------------------------------------------------------------------------*/
-    public async Task<T?> GetByStringAsync(Expression<Func<T, bool>> predicate)
+    public async Task<T?> GetByStringAsync
+    (
+        Expression<Func<T, bool>> predicate,
+        List<Func<IQueryable<T>, IQueryable<T>>>? queries = null,
+         Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+        bool firstRecord = true
+    )
     {
-        return await _dbSet.FirstOrDefaultAsync(predicate);
+        IQueryable<T> records = _dbSet;
+
+        if (queries != null)
+        {
+            foreach (Func<IQueryable<T>, IQueryable<T>>? query in queries)
+            {
+                records = query(records);
+            }
+        }
+
+        if (orderBy != null)
+        {
+            records = orderBy(records);
+        }
+
+        if (firstRecord)
+        {
+            return await records.FirstOrDefaultAsync(predicate);
+        }
+        else
+        {
+            return await records.LastOrDefaultAsync(predicate);
+        }
     }
 
     /*----------------------------To Get the all the values from table----------------------------------------
     -------------------------------------------------------------------------------------------------------*/
     public IEnumerable<T> GetAll() => _dbSet;
 
-    public async Task<IEnumerable<T>> GetByCondition(
+    /*----------------------------To Get records based on the condition ----------------------------------------
+    -------------------------------------------------------------------------------------------------------*/
+    public async Task<DbResult<T>> GetRecords(
         Expression<Func<T, bool>>? predicate = null,
         Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
         List<Expression<Func<T, object>>>? includes = null,
-        List<Func<IQueryable<T>, IQueryable<T>>>? thenIncludes = null)
+        List<Func<IQueryable<T>, IQueryable<T>>>? queries = null,
+        int pageSize = 0,
+        int pageNumber = 0)
     {
+        DbResult<T> result = new();
 
-        IQueryable<T> query = _dbSet;
+        IQueryable<T> records = _dbSet;
 
         //Apply Filters
         if (predicate != null)
         {
-            query = query.Where(predicate);
+            records = records.Where(predicate);
         }
 
         //Order By
         if (orderBy != null)
         {
-            query = orderBy(query);
+            records = orderBy(records);
         }
 
         // Apply Includes (First-level navigation properties)
@@ -81,42 +111,32 @@ public class GenericRepository<T> : IGenericRepository<T>
         {
             foreach (Expression<Func<T, object>>? include in includes)
             {
-                query = query.Include(include);
+                records = records.Include(include);
             }
         }
 
         // Apply ThenIncludes (Deeper navigation properties)
-        if (thenIncludes != null)
+        if (queries != null)
         {
-            foreach (var thenInclude in thenIncludes)
+            foreach (Func<IQueryable<T>, IQueryable<T>>? query in queries)
             {
-                query = thenInclude(query);
+                records = query(records);
             }
         }
 
-        return await query.ToListAsync();
+        if (pageSize == 0)
+        {
+            result.Records = await records.ToListAsync();
+        }
+        else
+        {
+            result.TotalRecord = records.Count();
+            result.Records = await records.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+        }
+
+        return result;
     }
 
-    public (IEnumerable<T> items, int totalCount) GetPagedRecords
-    (
-        int pageSize,
-        int pageNumber,
-        IEnumerable<T> items
-    )
-    {
-        int totalCount = items.Count();
-
-        items = items
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToList();
-
-        return (items, totalCount);
-    }
-
-    #endregion R : Read
-
-    #region U : Update
     /*------------------------------updates an existing entity in the database----------------------------------------
     -------------------------------------------------------------------------------------------------------*/
     public async Task UpdateAsync(T entity)
@@ -124,12 +144,4 @@ public class GenericRepository<T> : IGenericRepository<T>
         _dbSet.Update(entity);
         await _context.SaveChangesAsync();
     }
-
-    #endregion U : Update
-
-    #region D : Delete
-    /*------------------Only Soft Delete is allowed so no remove method------------------------------------
-    -------------------------------------------------------------------------------------------------------*/
-    #endregion D : Delete
-
 }

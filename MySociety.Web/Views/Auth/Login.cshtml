@@ -13,6 +13,10 @@
         <input asp-for="RememberMe" hidden/>
         <input asp-for="Email" hidden/>
         <input asp-for="LoginEnable" hidden/>
+        
+        <div class="text-custom">
+            OTP is sent successfully to @Model.Email
+        </div>
 
         <div class="mb-4">
             <input asp-for="OtpCode" class="form-control p-2" id="inputOtp" placeholder="Enter OTP*">

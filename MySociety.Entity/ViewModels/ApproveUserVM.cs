@@ -8,5 +8,6 @@ public class ApproveUserVM
     public string Block { get; set; } = "";
     public string Floor { get; set; } = "";
     public string House { get; set; } = "";
-    public bool IsApproved { get; set; }
+    public string Role { get; set; } = "";
+    public bool IsApproved { get; set; } = false;
 }

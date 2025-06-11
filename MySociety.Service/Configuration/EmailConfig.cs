@@ -10,7 +10,7 @@ public class EmailConfig
     public static string Password { get; set; } = "P}N^{z-]7Ilp";
     public static string FromEmail { get; set; } = "test.dotnet@etatvasoft.com";
     public static string FromName { get; set; } = "MySociety";
-    public static string AdminEmail { get; set; } = "soyid27936@2mik.com";
+    public static string AdminEmail { get; set; } = "manishapatel@yopmail.com";
 
     public static void LoadEmailConfiguration(IConfiguration configuration)
     {

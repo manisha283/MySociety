@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Ancizar+Sans:ital,wght@0,100..1000;1,100..1000&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Ancizar+Sans:ital,wght@0,100..1000;1,100..1000&display=swap");
 
 html {
   font-size: 18px !important;
@@ -10,7 +10,11 @@ html {
   }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
   box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
@@ -19,11 +23,164 @@ html {
   min-height: 100%;
 }
 
-.btn-delete{
+body {
+  margin-bottom: 60px;
+  font-family: "Ancizar Sans", sans-serif !important;
+  background-image: linear-gradient(to top, #fff1eb 0%, #bbe5f8 100%);
+  min-height: 100vh;
+  color: #333;
+  font-size: 18px !important;
+}
+
+.bg-custom-gradient{
+  background-image: linear-gradient(to top, #fff1eb 0%, #bbe5f8 100%);
+}
+
+.bg-custom {
+  background-color: rgba(255, 255, 255, 0.6);
+  /* background-color: aliceblue; */
+}
+
+.bg-custom-secondary {
+  color: white !important;
+  background-color: #3a6073 !important;
+}
+
+.btn-custom {
+  color: white !important;
+  background-color: #3a6073 !important;
+  border: 1px solid #3a6073;
+}
+
+.btn-custom-secondary{
+  color: #3a6073 !important;
+  border: 1px solid #3a6073 !important;
+}
+
+.btn-reject {
   background-color: lightcoral !important;
 }
 
-.btn-approve{
+.btn-approve {
   background-color: lightgreen !important;
 }
 
+.btn-edit{
+  border: 1px solid lightgreen !important;
+}
+
+.btn-delete{
+  border: 1px solid lightcoral !important;
+}
+
+.text-custom
+{
+  color: #3a6073 !important;
+}
+
+/* Modal */
+.modal-header{
+  border-bottom-width: 0px;
+}
+
+.modal-body{
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.modal-footer {
+  border-top-width: 0px;
+}
+
+.modal-footer button, .modal-footer a{
+  width: 90px;
+}
+
+.login-card {
+  background-color: rgba(255, 255, 255, 0.6) !important;
+  padding: 2rem;
+  border-radius: 20px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
+  max-width: 960px;
+  margin: auto;
+  color: #333;
+}
+
+.profile-img{
+  /* position: relative;
+  top: -25px;
+  left: 10px; */
+  height: 100px;
+  width: 110px;
+}
+
+.camera-img{
+  padding: 5px;
+  width: 30px;
+}
+
+.camera-div{
+  height: fit-content;
+  width: fit-content;
+  border: 1px solid gray;
+  border-radius: 50%;
+  position: relative;
+  top: 65px;
+  left: -30px;
+}
+
+.form-floating>label {
+  z-index: 5 !important;
+}
+
+#formMyProfile .form-floating>label {
+  top: -5px !important;
+  left: 12px !important;
+  /* left: unset; */
+}
+
+.changePassword-form input{ 
+  min-width: 220px;
+  max-width: 420px;
+}
+
+.change-content{
+  padding: 10px 10%;
+}
+
+@media (max-width: 450px) {
+  .change-content{
+      padding: 10px 0%;
+  }
+}
+
+.approval-table td{
+  background-color: #fbfbfb99 !important;
+}
+
+.approval-table th{
+  background-color: #fbfbfb99 !important;
+}
+
+.sortBtn[data-order="desc"]{
+  margin-left: -10px;
+}
+
+table{
+  overflow-x: auto; 
+  white-space: nowrap; 
+}
+
+table td{
+  font-weight: 500;
+}
+
+table td,th{
+  color: #686868 !important;
+  white-space: nowrap;
+}
+
+.below-navbar{
+  padding-top: 90px;
+}

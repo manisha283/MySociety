@@ -1,3 +1,4 @@
+using MySociety.Entity.HelperModels;
 using MySociety.Entity.Models;
 using MySociety.Repository.Interfaces;
 using MySociety.Service.Interfaces;
@@ -20,11 +21,11 @@ public class FloorService : IFloorService
     {
         int noOfFloors = await _blockService.GetNumberOfFloors(blockId);
 
-        IEnumerable<Floor> list = await _floorRepository.GetByCondition(
+        DbResult<Floor> result = await _floorRepository.GetRecords(
             predicate: f => f.DeletedBy == null && f.FloorNumber <= noOfFloors
         );
 
-        return list;
+        return result.Records;
     }
 
     public async Task<int> GetNumberOfHouse(int blockId)

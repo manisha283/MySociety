@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using MySociety.Entity.HelperModels;
 using MySociety.Entity.Models;
 using MySociety.Repository.Interfaces;
 using MySociety.Service.Interfaces;
@@ -20,17 +21,17 @@ public class HouseService : IHouseService
     {
         int NoOfHouse = await _floorService.GetNumberOfHouse(floorId);
 
-        IEnumerable<House> list = await _houseRepository.GetByCondition(
+        DbResult<House> dbResult = await _houseRepository.GetRecords(
             predicate: f => f.DeletedBy == null && f.HouseNumber <= NoOfHouse
         );
 
-        return list;
+        return dbResult.Records;
     }
 
     public async Task<string> GetName(int floorId)
     {
         House? house = await _houseRepository.GetByIdAsync(floorId);
-        return house.Name;
+        return house!.Name;
     }
 
 }

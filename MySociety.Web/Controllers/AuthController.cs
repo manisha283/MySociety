@@ -86,7 +86,10 @@ public class AuthController : Controller
             };
 
             Response.Cookies.Append("mySocietyAuthToken", loginResult.Token!, options);
-            Response.Cookies.Append("mySocietyProfileImg", loginResult.ImageUrl ?? Images.ProfileImg, options);
+            if (loginResult.ImageUrl != null)
+            {
+                Response.Cookies.Append("mySocietyProfileImg", loginResult.ImageUrl, options);
+            }
 
             if (loginVM.RememberMe)
             {

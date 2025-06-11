@@ -5,6 +5,7 @@ using MySociety.Web.Models;
 
 namespace MySociety.Web.Controllers;
 
+[Authorize]
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
@@ -19,12 +20,6 @@ public class HomeController : Controller
         return View();
     }
 
-    [Authorize(Roles = "Admin")]
-    public IActionResult Privacy()
-    {
-        throw new NotImplementedException();
-        return View();
-    }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
