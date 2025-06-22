@@ -55,6 +55,10 @@ public partial class User
 
     public virtual ICollection<House> HouseUpdatedByNavigations { get; set; } = new List<House>();
 
+    public virtual ICollection<NotificationMessage> NotificationMessageReceivers { get; set; } = new List<NotificationMessage>();
+
+    public virtual ICollection<NotificationMessage> NotificationMessageSenders { get; set; } = new List<NotificationMessage>();
+
     public virtual Role Role { get; set; } = null!;
 
     public virtual ICollection<UserOtp> UserOtps { get; set; } = new List<UserOtp>();

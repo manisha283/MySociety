@@ -36,6 +36,7 @@ public class JwtService : IJwtService
             new("email", email),
             new("role", role),
             new("roleId", user.RoleId.ToString()),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()) // Add user ID as NameIdentifier
         };
 
         JwtSecurityToken? token = new(

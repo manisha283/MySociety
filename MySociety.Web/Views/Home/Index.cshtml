@@ -5,3 +5,43 @@
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
 </div>
+
+<div class="text-center">
+    <h1 class="display-4">Real-Time Notifications</h1>
+    <div id="notificationArea" class="alert alert-info"></div>
+
+    <!-- Client-side notification form -->
+    <h3>Send Client-Side Notification (SignalR)</h3>
+    <form id="clientNotificationForm">
+        <div class="form-group">
+            <input type="text" id="clientTargetUserId" class="form-control" placeholder="Target user ID" />
+        </div>
+        <div class="form-group">
+            <input type="text" id="clientMessage" class="form-control" placeholder="Notification message" />
+        </div>
+        <button type="submit" class="btn btn-primary">Send Client Notification</button>
+    </form>
+
+    
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Client-side notification form
+            $("#clientNotificationForm").submit(function (e) {
+                e.preventDefault();
+                const targetUserId = $("#clientTargetUserId").val().trim();
+                const message = $("#clientMessage").val().trim();
+
+                window.sendNotification(targetUserId, message, function (success) {
+                    if (success) {
+                        $("#clientTargetUserId").val("");
+                        $("#clientMessage").val("");
+                    }
+                });
+            });
+
+        });
+    </script>
+}

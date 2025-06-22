@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MySociety.Entity.Data;
@@ -9,6 +10,7 @@ using MySociety.Service.Configuration;
 using MySociety.Service.Helper;
 using MySociety.Service.Implementations;
 using MySociety.Service.Interfaces;
+using MySociety.Web.Hubs;
 using MySociety.Web.Middlewares;
 using Serilog;
 
@@ -68,6 +70,10 @@ builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IVisitorService, VisitorService>();
 builder.Services.AddScoped<IVisitorFeedbackService, VisitorFeedbackService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddSingleton<IUserIdProvider, UserIdProvider>();
+
+builder.Services.AddSignalR();
 
 //Session 
 builder.Services.AddSession(options =>
@@ -146,6 +152,8 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.MapControllerRoute(
     name: "default",

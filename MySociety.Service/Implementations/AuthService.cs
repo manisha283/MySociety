@@ -38,7 +38,7 @@ public class AuthService : IAuthService
     public async Task<ResponseVM> VerifyUser(LoginVM loginVM)
     {
         ResponseVM response = await _userService.CheckUser(loginVM.Email);
-        if (!response.Success)
+        if (response.Message != NotificationMessages.AlreadyExisted.Replace("{0}", "User") && !response.Success)
         {
             return response;
         }

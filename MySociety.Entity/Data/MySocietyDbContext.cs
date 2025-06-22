@@ -24,6 +24,8 @@ public partial class MySocietyDbContext : DbContext
 
     public virtual DbSet<HouseMapping> HouseMappings { get; set; }
 
+    public virtual DbSet<NotificationMessage> NotificationMessages { get; set; }
+
     public virtual DbSet<ResetPasswordToken> ResetPasswordTokens { get; set; }
 
     public virtual DbSet<Role> Roles { get; set; }
@@ -216,6 +218,33 @@ public partial class MySocietyDbContext : DbContext
                 .HasForeignKey(d => d.UpdatedBy)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("HouseMapping_updated_by_fkey");
+        });
+
+        modelBuilder.Entity<NotificationMessage>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("NotificationMessages_pkey");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("created_at");
+            entity.Property(e => e.IsRead).HasColumnName("is_read");
+            entity.Property(e => e.Message)
+                .HasColumnType("character varying")
+                .HasColumnName("message");
+            entity.Property(e => e.ReceiverId).HasColumnName("receiver_id");
+            entity.Property(e => e.SenderId).HasColumnName("sender_id");
+
+            entity.HasOne(d => d.Receiver).WithMany(p => p.NotificationMessageReceivers)
+                .HasForeignKey(d => d.ReceiverId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("NotificationMessages_receiver_id_fkey");
+
+            entity.HasOne(d => d.Sender).WithMany(p => p.NotificationMessageSenders)
+                .HasForeignKey(d => d.SenderId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("NotificationMessages_sender_id_fkey");
         });
 
         modelBuilder.Entity<ResetPasswordToken>(entity =>

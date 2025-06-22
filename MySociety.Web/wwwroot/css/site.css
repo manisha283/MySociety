@@ -237,3 +237,7 @@ table td,th{
 .div-filter .form-floating>label{
   top: -5px;
 }
+
+.notificationBadge{
+  left: -20px;
+}
