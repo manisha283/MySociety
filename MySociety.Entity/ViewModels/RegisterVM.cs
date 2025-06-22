@@ -11,6 +11,7 @@ public class RegisterVM
     public string Email { get; set; } = null!;
 
     [Required(AllowEmptyStrings = false, ErrorMessage = "Name is required")]
+    [StringLength(50, ErrorMessage = "Name cannot exceed 100 characters")]
     public string Name { get; set; } = null!;
 
     [Required(AllowEmptyStrings = false, ErrorMessage = "New Password is required")]
@@ -23,20 +24,11 @@ public class RegisterVM
     [Compare("Password", ErrorMessage = "Password and confirmation password do not match.")]
     public string ConfirmPassword { get; set; } = "";
 
+    public int MyProperty { get; set; }
+
     [Required(ErrorMessage = "Role is required")]
     public int RoleId { get; set; } = 0;
     public IEnumerable<Role> Roles { get; set; } = new List<Role>();
-
-    public int BlockId { get; set; } = 0;
-    public IEnumerable<Block> Blocks { get; set; } = new List<Block>();
-
-    public int FloorId { get; set; } = 0;
-    public IEnumerable<Floor> Floors { get; set; } = new List<Floor>();
-
-    public int HouseId { get; set; } = 0;
-    public IEnumerable<House> Houses { get; set; } = new List<House>();
-
-    public string BlockName { get; set; } = "";
-    public string FloorName { get; set; } = "";
-    public string HouseName { get; set; } = "";
+    
+    public AddressVM Address { get; set; } = new();
 }

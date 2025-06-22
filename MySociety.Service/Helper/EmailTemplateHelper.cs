@@ -36,9 +36,9 @@ public static class EmailTemplateHelper
         string template = GetTemplateContent("NewUserRegistration");
         return template.Replace("{name}", registerVM.Name)
                       .Replace("{email}", registerVM.Email)
-                      .Replace("{blockName}", registerVM.BlockName)
-                      .Replace("{floorName}", registerVM.FloorName)
-                      .Replace("{houseName}", registerVM.HouseName)
+                      .Replace("{blockName}", registerVM.Address.BlockName)
+                      .Replace("{floorName}", registerVM.Address.FloorName)
+                      .Replace("{houseName}", registerVM.Address.HouseName)
                       .Replace("{registeredOn}", DateTime.Now.ToString());
     }
 

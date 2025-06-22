@@ -1,0 +1,118 @@
+@using MySociety.Entity.ViewModels
+@model VehiclePagination
+
+@{
+    int i = 1;
+}
+
+<!-- Table -->
+<div class="table-responsive bg-white mt-3">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col" class="col-3 sortable-column" data-column="number" data-current-order="asc">
+                    <span>Number</span>
+                    <span class="" data-order="asc">
+                        <img src="~/images/icons/arrow-up.svg" alt="">
+                    </span>
+                    <span class="d-none" data-order="desc">
+                        <img src="~/images/icons/arrow-down.svg" alt="">
+                    </span>
+                </th>
+
+                <th scope="col" class="col-3 sortable-column" data-column="name" data-current-order="desc">
+                    <span>Name</span>
+                    <span class="d-none" data-order="asc">
+                        <img src="~/images/icons/arrow-up.svg" alt="">
+                    </span>
+                    <span class="d-none" data-order="desc">
+                        <img src="~/images/icons/arrow-down.svg" alt="">
+                    </span>
+                </th>
+
+                <th scope="col" class="col-2 sortable-column" data-column="type" data-current-order="desc">
+                    <span>Type</span>
+                    <span class="d-none" data-order="asc">
+                        <img src="~/images/icons/arrow-up.svg" alt="">
+                    </span>
+                    <span class="d-none" data-order="desc">
+                        <img src="~/images/icons/arrow-down.svg" alt="">
+                    </span>
+                </th>
+
+                <th scope="col" class="col-2 sortable-column" data-column="parkingSlotNo" data-current-order="desc">
+                    <span>Parking Slot No.</span>
+                    <span class="d-none" data-order="asc">
+                        <img src="~/images/icons/arrow-up.svg" alt="">
+                    </span>
+                    <span class="d-none" data-order="desc">
+                        <img src="~/images/icons/arrow-down.svg" alt="">
+                    </span>
+                </th>
+
+                <th scope="col" class="col-1">Action</th>
+            </tr>
+        </thead>
+        <tbody class="table-group-divider">
+            @if (Model.Vehicles.Count > 0)
+            {
+                foreach (var vehicle in Model.Vehicles)
+                {
+                    <tr>
+                        <td>@vehicle.Number</td>
+                        <td>@vehicle.Name</td>
+                        <td>@vehicle.TypeName</td>
+                        <td>@(vehicle.ParkingSlotNo == null ? "NA" : vehicle.ParkingSlotNo)</td>
+                        <td>
+                            <a type="button" class="ps-0 pe-3 btn" onclick="getVehicle(@vehicle.Id)">
+                                <img src="/images/icons/edit.svg" alt="">
+                            </a>
+
+                            <a type="button" class="ps-0 btn btn-delete" onclick="deleteModal(this)" data-name="@vehicle.Name"
+                                data-id="@vehicle.Id">
+                                <img src="/images/icons/delete.svg" alt="">
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" class="text-center">No Record Found</td>
+                </tr>
+            }
+
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination Starts -->
+<div class="d-flex justify-content-end gap-1 flex-column flex-md-row pb-2">
+    <div class="d-flex flex-row justify-content-end align-items-center mb-1 me-1 gap-1">
+        <span>Items per page:</span>
+        <select class="form-select w-auto" onchange="paginationAjax(1)" id="itemsPerPage"
+            aria-label="Select items per page">
+            <option value="5" selected="@(Model.Page.PageSize == 5 ? true : false)">5</option>
+            <option value="10" selected="@(Model.Page.PageSize == 10 ? true : false)">10</option>
+            <option value="15" selected="@(Model.Page.PageSize == 15 ? true : false)">15</option>
+        </select>
+    </div>
+
+    <div class="d-flex flex-row justify-content-end align-items-center mb-1 gap-1">
+        <span>Showing @Model.Page.FromRec - @Model.Page.ToRec of @Model.Page.TotalRecord</span>
+
+        <!-- Previous Page Button -->
+        <button class="btn bg-white border btn-prev @(Model.Page.CurrentPage > 1 ? "" : "disabled")"
+            onclick="paginationAjax(@Model.Page.CurrentPage - 1)">
+            <img src="~/images/icons/chevron-left.svg" alt="">
+        </button>
+
+        <!-- Next Page Button -->
+        <button class="btn bg-white border btn-next @(Model.Page.CurrentPage < Model.Page.TotalPages ? "" : "disabled")"
+            onclick="paginationAjax(@Model.Page.CurrentPage + 1)">
+            <img src="~/images/icons/chevron-right.svg" alt="">
+        </button>
+    </div>
+</div>
+<!-- Pagination Ends -->

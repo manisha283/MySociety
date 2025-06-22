@@ -16,12 +16,14 @@ public class UserService : IUserService
 {
     private readonly IGenericRepository<User> _userRepository;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IHttpService _httpService;
 
-
-    public UserService(IGenericRepository<User> userRepository, IHttpContextAccessor httpContextAccessor)
+    public UserService(IGenericRepository<User> userRepository, IHttpContextAccessor httpContextAccessor, IHttpService httpService)
     {
         _userRepository = userRepository;
         _httpContextAccessor = httpContextAccessor;
+        _httpService = httpService;
+
     }
 
     #region Get
@@ -32,39 +34,6 @@ public class UserService : IUserService
         return user;
     }
 
-    public async Task<ProfileVM> GetProfile()
-    {
-        int userId = await LoggedInUser();
-        User user = await _userRepository.GetByStringAsync(
-            predicate: u => u.Id == userId,
-            queries: new List<Func<IQueryable<User>, IQueryable<User>>>
-            {
-                q => q.Include(u => u.UserHouseMappingUsers)
-                        .ThenInclude(uhm => uhm.HouseMapping)
-                        .ThenInclude(m => m.Block),
-                q => q.Include(u => u.UserHouseMappingUsers)
-                        .ThenInclude(uhm => uhm.HouseMapping)
-                        .ThenInclude(m => m.Floor),
-                q => q.Include(u => u.UserHouseMappingUsers)
-                        .ThenInclude(uhm => uhm.HouseMapping)
-                        .ThenInclude(m => m.House)
-            }
-        ) ?? throw new NotFoundException(NotificationMessages.NotFound.Replace("{0}", "User"));
-
-        ProfileVM profile = new()
-        {
-            UserId = userId,
-            Name = user.Name,
-            Phone = user.Phone,
-            Email = user.Email,
-            Block = user.UserHouseMappingUsers.Select(m => m.HouseMapping.Block.Name).FirstOrDefault()!,
-            Floor = user.UserHouseMappingUsers.Select(m => m.HouseMapping.Floor.Name).FirstOrDefault()!,
-            House = user.UserHouseMappingUsers.Select(m => m.HouseMapping.House.Name).FirstOrDefault()!,
-            ProfileImageUrl = user.ProfileImg
-        };
-
-        return profile;
-    }
     #endregion
 
     #region List
@@ -75,6 +44,7 @@ public class UserService : IUserService
 
         //For sorting the column according to order
         Func<IQueryable<User>, IOrderedQueryable<User>>? orderBy = q => q.OrderBy(u => u.Id);
+        
         if (!string.IsNullOrEmpty(filter.Column))
         {
             switch (filter.Column.ToLower())
@@ -85,27 +55,39 @@ public class UserService : IUserService
                 case "role":
                     orderBy = filter.Sort == "asc" ? q => q.OrderBy(u => u.Role.Name) : q => q.OrderByDescending(u => u.Role.Name);
                     break;
+                case "email":
+                    orderBy = filter.Sort == "asc" ? q => q.OrderBy(u => u.Email) : q => q.OrderByDescending(u => u.Email);
+                    break;
+                case "block":
+                    orderBy = filter.Sort == "asc" ? q => q.OrderBy(u => u.HouseMappingOwners.Select(x => x.Block.Name).FirstOrDefault())
+                                                    : q => q.OrderByDescending(u => u.HouseMappingOwners.Select(x => x.Block.Name).FirstOrDefault());
+                    break;
+                case "floor":
+                    orderBy = filter.Sort == "asc" ? q => q.OrderBy(u => u.HouseMappingOwners.Select(x => x.Floor.Name).FirstOrDefault())
+                                                    : q => q.OrderByDescending(u => u.HouseMappingOwners.Select(x => x.Floor.Name).FirstOrDefault());
+                    break;
+                case "house":
+                    orderBy = filter.Sort == "asc" ? q => q.OrderBy(u => u.HouseMappingOwners.Select(x => x.House.Name).FirstOrDefault())
+                                                    : q => q.OrderByDescending(u => u.HouseMappingOwners.Select(x => x.House.Name).FirstOrDefault());
+                    break;
                 default:
                     break;
             }
         }
 
-        DbResult<User> users = await _userRepository.GetRecords(
-            predicate: u => u.DeletedBy == null && !u.IsApproved && u.IsActive == true &&
+        DbResult<User> dbResult = await _userRepository.GetRecords(
+            predicate: u => u.DeletedBy == null && u.IsApproved == null && u.IsActive == true &&
                          (string.IsNullOrEmpty(filter.Search.ToLower()) ||
-                            u.Role.Name.ToLower() == filter.Search.ToLower() ||
+                            u.Role.Name.ToLower().Contains(filter.Search.ToLower()) ||
                             u.Name.ToLower().Contains(filter.Search.ToLower())),
             orderBy: orderBy,
             queries: new List<Func<IQueryable<User>, IQueryable<User>>>
             {
-                q => q.Include(u => u.UserHouseMappingUsers)
-                        .ThenInclude(uhm => uhm.HouseMapping)
+                q => q.Include(u => u.HouseMappingOwners)
                         .ThenInclude(m => m.Block),
-                q => q.Include(u => u.UserHouseMappingUsers)
-                        .ThenInclude(uhm => uhm.HouseMapping)
+                q => q.Include(u => u.HouseMappingOwners)
                         .ThenInclude(m => m.Floor),
-                q => q.Include(u => u.UserHouseMappingUsers)
-                        .ThenInclude(uhm => uhm.HouseMapping)
+                q => q.Include(u => u.HouseMappingOwners)
                         .ThenInclude(m => m.House),
                 q => q.Include(u => u.Role)
             },
@@ -115,19 +97,22 @@ public class UserService : IUserService
 
         ApprovalPaginationVM model = new()
         {
-            Users = users.Records.Select(u => new ApproveUserVM()
+            Users = dbResult.Records.Select(u => new ApproveUserVM()
             {
                 UserId = u.Id,
                 Email = u.Email,
                 Name = u.Name,
-                Block = u.UserHouseMappingUsers.Where(u => u.UserId == u.Id).Select(u => u.HouseMapping.Block.Name).FirstOrDefault()!,
-                Floor = u.UserHouseMappingUsers.Where(u => u.UserId == u.Id).Select(u => u.HouseMapping.Floor.Name).FirstOrDefault()!,
-                House = u.UserHouseMappingUsers.Where(u => u.UserId == u.Id).Select(u => u.HouseMapping.House.Name).FirstOrDefault()!,
+                Address = new()
+                {
+                    BlockName = u.HouseMappingOwners.Select(m => m.Block.Name).FirstOrDefault(),
+                    FloorName = u.HouseMappingOwners.Select(m => m.Floor.Name).FirstOrDefault(),
+                    HouseName = u.HouseMappingOwners.Select(m => m.House.Name).FirstOrDefault(),
+                },
                 Role = u.Role.Name
             }).ToList()
         };
 
-        model.Page.SetPagination(users.TotalRecord, filter.PageSize, filter.PageNumber);
+        model.Page.SetPagination(dbResult.TotalRecord, filter.PageSize, filter.PageNumber);
         return model;
     }
 
@@ -154,26 +139,8 @@ public class UserService : IUserService
 
     public async Task<ResponseVM> Register(RegisterVM registerVM)
     {
-        ResponseVM response = new();
-        User? user = await GetByEmail(registerVM.Email);
-        if (user != null)
-        {
-            response.Success = false;
-
-            if (!user.IsApproved)
-            {
-                response.Message = NotificationMessages.UserNotApproved;
-            }
-            else if (user.IsActive == false)
-            {
-                response.Message = NotificationMessages.UserNotActive;
-            }
-            else
-            {
-                response.Message = NotificationMessages.AlreadyExisted.Replace("{0}", "User");
-            }
-        }
-        else
+        ResponseVM response = await CheckUser(registerVM.Email);
+        if (response.Success)
         {
             await Add(registerVM);
 
@@ -255,29 +222,23 @@ public class UserService : IUserService
 
     }
 
-    public async Task ApproveUser(int userId)
+    public async Task<ResponseVM> ChangeUserStatus(int userId, bool isApprove)
     {
         User user = await _userRepository.GetByIdAsync(userId)
                     ?? throw new NotFoundException(NotificationMessages.NotFound.Replace("{0}", "User"));
 
-        user.IsApproved = true;
+        user.IsApproved = isApprove;
         user.UpdatedAt = DateTime.Now;
-        user.UpdatedBy = await LoggedInUser();
+        user.UpdatedBy = await _httpService.LoggedInUserId();
 
         await _userRepository.UpdateAsync(user);
+
+        return new ResponseVM
+        {
+            Success = true,
+            Message = isApprove ? NotificationMessages.Approved.Replace("{0}", "User") : NotificationMessages.Rejected.Replace("{0}", "User")
+        };
     }
-
-    public async Task Delete(int userId)
-    {
-        User user = await _userRepository.GetByIdAsync(userId)
-                    ?? throw new NotFoundException(NotificationMessages.NotFound.Replace("{0}", "User"));
-
-        user.DeletedAt = DateTime.Now;
-        user.DeletedBy = await LoggedInUser();
-
-        await _userRepository.UpdateAsync(user);
-    }
-
 
     #endregion
 
@@ -290,9 +251,13 @@ public class UserService : IUserService
         {
             response.Success = false;
 
-            if (user.IsApproved)
+            if (user.IsApproved == null)
             {
-                response.Message = NotificationMessages.UserNotApproved;
+                response.Message = NotificationMessages.UserPending;
+            }
+            else if (user.IsApproved == false)
+            {
+                response.Message = NotificationMessages.UserRejected;
             }
             else if (user.IsActive == false)
             {
@@ -310,25 +275,13 @@ public class UserService : IUserService
         return response;
     }
 
-    public async Task<int> LoggedInUser()
-    {
-        string token = _httpContextAccessor.HttpContext.Request.Cookies["mySocietyAuthToken"];
-        string userEmail = JwtService.GetClaimValue(token, "email")
-                        ?? throw new NotFoundException(NotificationMessages.NotFound.Replace("{0}", "Logged In User"));
-
-        User user = await GetByEmail(userEmail)
-                    ?? throw new NotFoundException(NotificationMessages.NotFound.Replace("{0}", "Logged In User"));
-
-        return user.Id;
-    }
-
     #endregion
 
     #region Change Password
 
     public async Task<ResponseVM> ChangePassword(ChangePasswordVM model)
     {
-        User user = await _userRepository.GetByIdAsync(await LoggedInUser()) ?? throw new NotFoundException(NotificationMessages.NotFound.Replace("{0}", "User"));
+        User user = await _userRepository.GetByIdAsync(await _httpService.LoggedInUserId()) ?? throw new NotFoundException(NotificationMessages.NotFound.Replace("{0}", "User"));
 
         ResponseVM response = new();
 

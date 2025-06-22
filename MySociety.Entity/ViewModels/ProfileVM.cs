@@ -7,7 +7,7 @@ namespace MySociety.Entity.ViewModels;
 public class ProfileVM
 {
     public int UserId { get; set; } = 0;
-    
+
     [Required(ErrorMessage = "Name is required")]
     [StringLength(50, ErrorMessage = "Name cannot exceed 50 characters")]
     public string Name { get; set; } = null!;
@@ -25,8 +25,7 @@ public class ProfileVM
 
     public string? Role { get; set; } = null!;
 
-    public string Block { get; set; } = "";
-    public string Floor { get; set; } = "";
-    public string House { get; set; } = "";
-
+    public string? Block { get; set; } = "";
+    public string? Floor { get; set; } = "";
+    public string? House { get; set; } = "";
 }

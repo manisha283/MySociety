@@ -10,7 +10,7 @@
 
 <form asp-controller="Auth" asp-action="Register" class="row row-cols-1">
 
-    <input type="hidden" id="RoleId" name="RoleId" value="-1" />
+    @* <input type="hidden" id="RoleId" name="RoleId" value="-1" /> *@
 
     <!-- Name -->
     <div class="mb-4 col">
@@ -64,38 +64,38 @@
 
     <!-- Address -->
     <div class="mb-4 col-4 d-none resident-div">
-        <select asp-for="BlockId" id="selectBlockId" class="form-select" aria-label="Default select example"
+        <select asp-for="Address.BlockId" id="selectBlockId" class="form-select" aria-label="Default select example"
             onchange="getFloor()">
             <option selected value="-1">Select Block*</option>
-            @foreach (var block in Model.Blocks)
+            @foreach (var block in Model.Address.Blocks)
             {
                 <option value="@block.Id">@block.Name</option>
             }
         </select>
-        <span asp-validation-for="BlockId" class="text-danger d-flex justify-content-start"></span>
+        <span asp-validation-for="Address.BlockId" class="text-danger d-flex justify-content-start"></span>
     </div>
 
     <div class="mb-4 col-4 d-none resident-div">
-        <select asp-for="FloorId" id="selectFloorId" class="form-select" aria-label="Default select example" disabled
+        <select asp-for="Address.FloorId" id="selectFloorId" class="form-select" aria-label="Default select example" disabled
             onchange="getHouse()">
             <option selected value="-1">Select Floor*</option>
-            @foreach (var floor in Model.Floors)
+            @foreach (var floor in Model.Address.Floors)
             {
                 <option value="@floor.Id">@floor.Name</option>
             }
         </select>
-        <span asp-validation-for="FloorId" class="text-danger d-flex justify-content-start"></span>
+        <span asp-validation-for="Address.FloorId" class="text-danger d-flex justify-content-start"></span>
     </div>
 
     <div class="mb-4 col-4 d-none resident-div">
-        <select asp-for="HouseId" id="selectHouseId" class="form-select" aria-label="Default select example" disabled>
+        <select asp-for="Address.HouseId" id="selectHouseId" class="form-select" aria-label="Default select example" disabled>
             <option selected value="-1">Select House*</option>
-            @foreach (var floor in Model.Floors)
+            @foreach (var floor in Model.Address.Floors)
             {
                 <option value="@floor.Id">@floor.Name</option>
             }
         </select>
-        <span asp-validation-for="HouseId" class="text-danger d-flex justify-content-start"></span>
+        <span asp-validation-for="Address.HouseId" class="text-danger d-flex justify-content-start"></span>
     </div>
 
     <!-- Password -->
@@ -134,8 +134,10 @@
 </form>
 
 @section Scripts {
+    
+    <script src="~/js/address.js"></script>
+    
     <script>
-
         function updateRoleId() {
             var selectedRoleId = $('#select-role').val();
 
@@ -149,76 +151,7 @@
                 $('.resident-div').addClass('d-none');
                 $('#RoleId').val(selectedRoleId);
                 clearAddress();
-
             }
         };
-
-        function getFloor() {
-            $.ajax({
-                url: '@Url.Action("GetFloor", "Address")',
-                type: 'GET',
-                data: {
-                    blockId: $('#selectBlockId').val()
-                },
-                success: function (floors) {
-                    var floorSelect = $('#selectFloorId');
-                    floorSelect.empty();
-                    $("#selectHouseId").empty();
-
-                    floorSelect.append('<option selected value="">Select Floor*</option>');
-                    $("#selectHouseId").append('<option selected value="">Select House*</option>');
-
-                    $.each(floors, function (index, floor) {
-                        floorSelect.append($('<option/>', {
-                            value: floor.value,
-                            text: floor.text
-                        }));
-                    });
-
-                    floorSelect.prop('disabled', false);
-                },
-                error: function () {
-                    alert("Error loading floors.");
-                }
-            });
-        }
-
-        function getHouse() {
-            $.ajax({
-                url: '@Url.Action("GetHouse", "Address")',
-                type: 'GET',
-                data: {
-                    blockId: $('#selectBlockId').val(),
-                    floorId: $('#selectFloorId').val()
-                },
-                success: function (houses) {
-                    var houseSelect = $('#selectHouseId');
-                    houseSelect.empty();
-
-                    houseSelect.append('<option selected value="">Select House*</option>');
-
-                    $.each(houses, function (index, house) {
-                        houseSelect.append($('<option/>', {
-                            value: house.value,
-                            text: house.text
-                        }));
-                    });
-
-                    houseSelect.prop('disabled', false);
-                },
-                error: function () {
-                    alert("Error loading houses.");
-                }
-            });
-        }
-
-        function clearAddress() {
-            $('#selectBlockId').val('-1');
-            $('#selectFloorId').val('-1').prop('disabled', true).empty().append('<option selected value="-1">Select Floor*</option>');
-            $('#selectHouseId').val('-1').prop('disabled', true).empty().append('<option selected value="-1">Select House*</option>');
-        }
-
-
-
     </script>
 }

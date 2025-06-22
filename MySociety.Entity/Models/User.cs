@@ -33,7 +33,7 @@ public partial class User
 
     public int? DeletedBy { get; set; }
 
-    public bool IsApproved { get; set; }
+    public bool? IsApproved { get; set; }
 
     public virtual ICollection<Block> BlockCreatedByNavigations { get; set; } = new List<Block>();
 
@@ -47,15 +47,15 @@ public partial class User
 
     public virtual ICollection<HouseMapping> HouseMappingCreatedByNavigations { get; set; } = new List<HouseMapping>();
 
+    public virtual ICollection<HouseMapping> HouseMappingOwners { get; set; } = new List<HouseMapping>();
+
+    public virtual ICollection<HouseMapping> HouseMappingTenants { get; set; } = new List<HouseMapping>();
+
     public virtual ICollection<HouseMapping> HouseMappingUpdatedByNavigations { get; set; } = new List<HouseMapping>();
 
     public virtual ICollection<House> HouseUpdatedByNavigations { get; set; } = new List<House>();
 
     public virtual Role Role { get; set; } = null!;
-
-    public virtual ICollection<UserHouseMapping> UserHouseMappingCreatedByNavigations { get; set; } = new List<UserHouseMapping>();
-
-    public virtual ICollection<UserHouseMapping> UserHouseMappingUsers { get; set; } = new List<UserHouseMapping>();
 
     public virtual ICollection<UserOtp> UserOtps { get; set; } = new List<UserOtp>();
 

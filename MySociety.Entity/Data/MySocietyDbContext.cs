@@ -30,13 +30,17 @@ public partial class MySocietyDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
-    public virtual DbSet<UserHouseMapping> UserHouseMappings { get; set; }
-
     public virtual DbSet<UserOtp> UserOtps { get; set; }
 
     public virtual DbSet<Vehicle> Vehicles { get; set; }
 
     public virtual DbSet<VehicleType> VehicleTypes { get; set; }
+
+    public virtual DbSet<VisitPurpose> VisitPurposes { get; set; }
+
+    public virtual DbSet<Visitor> Visitors { get; set; }
+
+    public virtual DbSet<VisitorFeedback> VisitorFeedbacks { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseNpgsql("Name=ConnectionStrings:DbConnection");
@@ -169,6 +173,11 @@ public partial class MySocietyDbContext : DbContext
             entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
             entity.Property(e => e.FloorId).HasColumnName("floor_id");
             entity.Property(e => e.HouseId).HasColumnName("house_id");
+            entity.Property(e => e.HouseName)
+                .HasMaxLength(15)
+                .HasColumnName("house_name");
+            entity.Property(e => e.OwnerId).HasColumnName("owner_id");
+            entity.Property(e => e.TenantId).HasColumnName("tenant_id");
             entity.Property(e => e.UpdatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp without time zone")
@@ -194,6 +203,14 @@ public partial class MySocietyDbContext : DbContext
                 .HasForeignKey(d => d.HouseId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("HouseMapping_house_id_fkey");
+
+            entity.HasOne(d => d.Owner).WithMany(p => p.HouseMappingOwners)
+                .HasForeignKey(d => d.OwnerId)
+                .HasConstraintName("HouseMapping_owner_id_fkey");
+
+            entity.HasOne(d => d.Tenant).WithMany(p => p.HouseMappingTenants)
+                .HasForeignKey(d => d.TenantId)
+                .HasConstraintName("HouseMapping_tenant_id_fkey");
 
             entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.HouseMappingUpdatedByNavigations)
                 .HasForeignKey(d => d.UpdatedBy)
@@ -281,41 +298,6 @@ public partial class MySocietyDbContext : DbContext
                 .HasConstraintName("Users_role_id_fkey");
         });
 
-        modelBuilder.Entity<UserHouseMapping>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("UserHouseMapping_pkey");
-
-            entity.ToTable("UserHouseMapping");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("created_at");
-            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
-            entity.Property(e => e.DeletedAt)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("deleted_at");
-            entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
-            entity.Property(e => e.HouseMappingId).HasColumnName("house_mapping_id");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
-
-            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.UserHouseMappingCreatedByNavigations)
-                .HasForeignKey(d => d.CreatedBy)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("UserHouseMapping_created_by_fkey");
-
-            entity.HasOne(d => d.HouseMapping).WithMany(p => p.UserHouseMappings)
-                .HasForeignKey(d => d.HouseMappingId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("UserHouseMapping_house_mapping_id_fkey");
-
-            entity.HasOne(d => d.User).WithMany(p => p.UserHouseMappingUsers)
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("UserHouseMapping_user_id_fkey");
-        });
-
         modelBuilder.Entity<UserOtp>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("UserOtp_pkey");
@@ -356,6 +338,7 @@ public partial class MySocietyDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(255)
                 .HasColumnName("name");
+            entity.Property(e => e.ParkingSlotNo).HasColumnName("parking_slot_no");
             entity.Property(e => e.UpdatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp without time zone")
@@ -398,6 +381,88 @@ public partial class MySocietyDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(50)
                 .HasColumnName("name");
+        });
+
+        modelBuilder.Entity<VisitPurpose>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("VisitPurpose_pkey");
+
+            entity.ToTable("VisitPurpose");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .HasColumnName("name");
+        });
+
+        modelBuilder.Entity<Visitor>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("Visitors_pkey");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CheckInTime)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("check_in_time");
+            entity.Property(e => e.CheckOutTime)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("check_out_time");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.DeletedAt)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("deleted_at");
+            entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(e => e.HouseMappingId).HasColumnName("house_mapping_id");
+            entity.Property(e => e.IsApproved).HasColumnName("is_approved");
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .HasColumnName("name");
+            entity.Property(e => e.NoOfVisitors).HasColumnName("no_of_visitors");
+            entity.Property(e => e.Phone)
+                .HasColumnType("character varying")
+                .HasColumnName("phone");
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("updated_at");
+            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+            entity.Property(e => e.VehicleNo)
+                .HasMaxLength(15)
+                .HasColumnName("vehicle_no");
+            entity.Property(e => e.VisitPurposeId).HasColumnName("visit_purpose_id");
+            entity.Property(e => e.VisitPurposeReason)
+                .HasColumnType("character varying")
+                .HasColumnName("visit_purpose_reason");
+
+            entity.HasOne(d => d.HouseMapping).WithMany(p => p.Visitors)
+                .HasForeignKey(d => d.HouseMappingId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("Visitors_house_mapping_id_fkey");
+
+            entity.HasOne(d => d.VisitPurpose).WithMany(p => p.Visitors)
+                .HasForeignKey(d => d.VisitPurposeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("Visitors_visit_purpose_id_fkey");
+        });
+
+        modelBuilder.Entity<VisitorFeedback>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("VisitorFeedbacks_pkey");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Feedback)
+                .HasMaxLength(500)
+                .HasColumnName("feedback");
+            entity.Property(e => e.Rating).HasColumnName("rating");
+            entity.Property(e => e.VisitorId).HasColumnName("visitor_id");
+
+            entity.HasOne(d => d.Visitor).WithMany(p => p.VisitorFeedbacks)
+                .HasForeignKey(d => d.VisitorId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("VisitorFeedbacks_visitor_id_fkey");
         });
 
         OnModelCreatingPartial(modelBuilder);

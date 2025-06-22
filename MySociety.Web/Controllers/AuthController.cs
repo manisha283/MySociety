@@ -13,15 +13,12 @@ public class AuthController : Controller
     private readonly IAuthService _authService;
     private readonly IBlockService _blockService;
     private readonly IRoleService _roleService;
-    private readonly IUserService _userService;
 
-    public AuthController(IAuthService authService, IBlockService blockService, IRoleService roleService, IUserService userService)
+    public AuthController(IAuthService authService, IBlockService blockService, IRoleService roleService)
     {
         _authService = authService;
         _blockService = blockService;
         _roleService = roleService;
-        _userService = userService;
-
     }
 
     #region  Login
@@ -79,7 +76,7 @@ public class AuthController : Controller
         {
             CookieOptions options = new()
             {
-                Expires = DateTime.Now.AddDays(1),
+                Expires = DateTime.Now.AddDays(30),
                 HttpOnly = true,
                 IsEssential = true,
                 Secure = true
@@ -112,7 +109,10 @@ public class AuthController : Controller
         RegisterVM registerVM = new()
         {
             Roles = _roleService.List(),
-            Blocks = await _blockService.List()
+            Address = new()
+            {
+                Blocks = await _blockService.List()
+            }
         };
         return View(registerVM);
     }

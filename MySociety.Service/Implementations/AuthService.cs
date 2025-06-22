@@ -16,21 +16,17 @@ public class AuthService : IAuthService
     private readonly IJwtService _jwtService;
     private readonly IBlockService _blockService;
     private readonly IUserService _userService;
-    private readonly IUserHouseMappingService _userHouseMappingService;
-    private readonly IHouseMappingService _houseMappingService;
     private readonly IFloorService _floorService;
     private readonly IHouseService _houseService;
     private readonly IGenericRepository<UserOtp> _userOtpRepository;
 
-    public AuthService(IEmailService emailService, IJwtService jwtService, IGenericRepository<ResetPasswordToken> resetPasswordRepository, IBlockService blockService, IUserService userService, IUserHouseMappingService userHouseMappingService, IHouseMappingService houseMappingService, IFloorService floorService, IHouseService houseService, IGenericRepository<UserOtp> userOtpRepository)
+    public AuthService(IEmailService emailService, IJwtService jwtService, IGenericRepository<ResetPasswordToken> resetPasswordRepository, IBlockService blockService, IUserService userService, IFloorService floorService, IHouseService houseService, IGenericRepository<UserOtp> userOtpRepository)
     {
         _emailService = emailService;
         _jwtService = jwtService;
         _resetPasswordRepository = resetPasswordRepository;
         _blockService = blockService;
         _userService = userService;
-        _userHouseMappingService = userHouseMappingService;
-        _houseMappingService = houseMappingService;
         _floorService = floorService;
         _houseService = houseService;
         _userOtpRepository = userOtpRepository;
@@ -41,20 +37,15 @@ public class AuthService : IAuthService
 
     public async Task<ResponseVM> VerifyUser(LoginVM loginVM)
     {
-        ResponseVM response = new();
+        ResponseVM response = await _userService.CheckUser(loginVM.Email);
+        if (!response.Success)
+        {
+            return response;
+        }
 
         User? user = await _userService.GetByEmail(loginVM.Email);
-        if (user == null)
-        {
-            response.Success = false;
-            response.Message = NotificationMessages.NotFound.Replace("{0}", "User");
-        }
-        else if (!user.IsApproved)
-        {
-            response.Success = false;
-            response.Message = response.Message = NotificationMessages.UserNotApproved;
-        }
-        else if (!PasswordHelper.VerifyPassword(loginVM.Password, user.Password))
+
+        if (!PasswordHelper.VerifyPassword(loginVM.Password, user!.Password))
         {
             response.Success = false;
             response.Message = NotificationMessages.Invalid.Replace("{0}", "Credentials");
@@ -246,34 +237,36 @@ public class AuthService : IAuthService
     public async Task<ResponseVM> Register(RegisterVM registerVM)
     {
         ResponseVM response = await _userService.CheckUser(registerVM.Email);
-
-        if (response.Success)
+        if (!response.Success)
         {
-            int userId = await _userService.Add(registerVM);
-            int houseMappingId = await _houseMappingService.Get(registerVM.BlockId, registerVM.FloorId, registerVM.FloorId);
-            await _userHouseMappingService.Add(userId, houseMappingId);
-
-            response.Success = true;
-            response.Message = NotificationMessages.UserRegistered;
-
-            registerVM.BlockName = await _blockService.GetName(registerVM.BlockId);
-            registerVM.FloorName = await _floorService.GetName(registerVM.FloorId);
-            registerVM.HouseName = await _houseService.GetName(registerVM.HouseId);
-
-            //Sending email to user for resetting password
-            string body = EmailTemplateHelper.NewUserRegistration(registerVM);
-
-            if (await _emailService.SendEmail(EmailConfig.AdminEmail, "New User Registered", body))
-            {
-                response.Success = true;
-                response.Message = NotificationMessages.EmailSent;
-            }
-            else
-            {
-                response.Success = false;
-                response.Message = NotificationMessages.EmailSendingFailed;
-            }
+            return response;
         }
+
+        int userId = await _userService.Add(registerVM);
+        // await _houseMappingService.UpdateUser(registerVM.BlockId, registerVM.FloorId, registerVM.FloorId);
+        // await _userHouseMappingService.Add(userId, houseMappingId);
+
+        response.Success = true;
+        response.Message = NotificationMessages.UserRegistered;
+
+        registerVM.Address.BlockName = await _blockService.GetName(registerVM.Address.BlockId);
+        registerVM.Address.FloorName = await _floorService.GetName(registerVM.Address.FloorId);
+        registerVM.Address.HouseName = await _houseService.GetName(registerVM.Address.HouseId);
+
+        //Sending email to user for resetting password
+        string body = EmailTemplateHelper.NewUserRegistration(registerVM);
+
+        if (await _emailService.SendEmail(EmailConfig.AdminEmail, "New User Registered", body))
+        {
+            response.Success = true;
+            response.Message = NotificationMessages.EmailSent;
+        }
+        else
+        {
+            response.Success = false;
+            response.Message = NotificationMessages.EmailSendingFailed;
+        }
+
 
         return response;
     }

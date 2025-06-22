@@ -5,8 +5,8 @@ namespace MySociety.Entity.Attributes;
 
 public class ImageTypeAttribute : ValidationAttribute
 {
-    private readonly string[] _allowedTypes = new[] { ".jpg", ".jpeg", ".png" };
-    private readonly int _allowedFileSizeMB = 1 * 1024 * 1024; 
+    private readonly string[] _allowedTypes = new[] { ".jpg", ".jpeg", ".png" , ".webp"};
+    private readonly int _allowedFileSizeMB = 1; 
  
     protected override ValidationResult IsValid(object value, ValidationContext validationContext)
     {
@@ -15,12 +15,12 @@ public class ImageTypeAttribute : ValidationAttribute
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (!_allowedTypes.Contains(extension))
             {
-                return new ValidationResult($"Only the following file types are allowed: {string.Join(", ", _allowedTypes)}");
+                return new ValidationResult($"Only the following file types are allowed {string.Join(", ", _allowedTypes)}");
             }
 
-            if (file.Length > _allowedFileSizeMB)
+            if (file.Length > _allowedFileSizeMB * 1024 * 1024)
             {
-                return new ValidationResult($"File too Big, please select a file less than {string.Join(", ", _allowedFileSizeMB)} mb");
+                return new ValidationResult($"File size must be less than {string.Join(", ", _allowedFileSizeMB)} MB");
             }
         }
         return ValidationResult.Success!;

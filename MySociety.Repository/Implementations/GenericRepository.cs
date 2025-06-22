@@ -87,6 +87,7 @@ public class GenericRepository<T> : IGenericRepository<T>
         Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
         List<Expression<Func<T, object>>>? includes = null,
         List<Func<IQueryable<T>, IQueryable<T>>>? queries = null,
+        List<Expression<Func<T, bool>>>? predicates = null,
         int pageSize = 0,
         int pageNumber = 0)
     {
@@ -115,7 +116,7 @@ public class GenericRepository<T> : IGenericRepository<T>
             }
         }
 
-        // Apply ThenIncludes (Deeper navigation properties)
+        // Apply any query like ThenIncludes for Deeper navigation properties
         if (queries != null)
         {
             foreach (Func<IQueryable<T>, IQueryable<T>>? query in queries)
@@ -124,6 +125,16 @@ public class GenericRepository<T> : IGenericRepository<T>
             }
         }
 
+        //Apply multiple predicates
+        if (predicates != null)
+        {
+            foreach (var p in predicates)
+            {
+                records = records.Where(p);
+            }
+        }
+
+        //Check whether pagination is required
         if (pageSize == 0)
         {
             result.Records = await records.ToListAsync();

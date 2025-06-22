@@ -9,7 +9,7 @@ public partial class Vehicle
 
     public int UserId { get; set; }
 
-    public string? VehicleNumber { get; set; }
+    public string VehicleNumber { get; set; } = null!;
 
     public string Name { get; set; } = null!;
 
@@ -26,6 +26,8 @@ public partial class Vehicle
     public DateTime? DeletedAt { get; set; }
 
     public int? DeletedBy { get; set; }
+
+    public int? ParkingSlotNo { get; set; }
 
     public virtual User CreatedByNavigation { get; set; } = null!;
 

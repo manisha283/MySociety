@@ -6,6 +6,7 @@ using MySociety.Service.Interfaces;
 
 namespace MySociety.Web.Controllers;
 
+[Authorize]
 public class AdminPanelController : Controller
 {
     private readonly IUserService _userService;
@@ -29,25 +30,13 @@ public class AdminPanelController : Controller
     }
 
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> ApproveUser(int userId)
+    public async Task<IActionResult> ChangeUserStatus(int userId, bool isApprove)
     {
-        await _userService.ApproveUser(userId);
+        await _userService.ChangeUserStatus(userId, isApprove);
         ResponseVM response = new()
         {
             Success = true,
-            Message = NotificationMessages.UserApproved
-        };
-        return Json(response);
-    }
-
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> DeleteUser(int userId)
-    {
-        await _userService.Delete(userId);
-        ResponseVM response = new()
-        {
-            Success = true,
-            Message = NotificationMessages.Deleted.Replace("{0}","User")
+            Message = NotificationMessages.Approved.Replace("{0}", "User")
         };
         return Json(response);
     }

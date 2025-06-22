@@ -1,0 +1,52 @@
+@using MySociety.Entity.Models
+@using MySociety.Entity.ViewModels
+@model VehicleVM
+
+<div class="modal-header">
+    <h1 class="modal-title fs-5" id="staticBackdropLabel">Vehicle Details</h1>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<form asp-action="SaveVehicle" asp-controller="MyProfile" id="SaveVehicleForm" method="post">
+    <div class="modal-body">
+
+        <input asp-for="Id" hidden>
+
+        <div class="row row-cols-1">
+            <div class="form-group col mb-3">
+                <label asp-for="Number" class="fw-semibold">Number</label>
+                <input asp-for="Number" type="text" class="form-control" aria-describedby="email">
+                <span asp-validation-for="Number" class="text-danger"></span>
+            </div>
+
+            <div class="form-group col mb-3">
+                <label asp-for="Name" class="fw-semibold">Name</label>
+                <input asp-for="Name" type="text" class="form-control" aria-describedby="Phone">
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="form-group col mb-3">
+                <label asp-for="TypeId" class="fw-semibold">Vehicle Type</label>
+                <select asp-for="TypeId" class="form-select" aria-label="vehicletype">
+                    <option selected value="">Select Vehicle Type</option>
+                    @foreach (VehicleType type in Model.Types)
+                    {
+                        <option value="@type.Id"> @type.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="TypeId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group col mb-3">
+                <label asp-for="ParkingSlotNo" class="fw-semibold">Parking slot number</label>
+                <input asp-for="ParkingSlotNo" class="form-control" aria-describedby="ParkingSlotNumber">
+                <span asp-validation-for="ParkingSlotNo" class="text-danger"></span>
+            </div>
+        </div>
+
+    </div>
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-custom">Save</button>
+        <button type="reset" class="btn btn-custom-secondary">Clear</button>
+    </div>
+</form>

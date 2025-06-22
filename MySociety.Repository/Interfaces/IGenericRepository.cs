@@ -17,6 +17,7 @@ public interface IGenericRepository<T>
         Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
         List<Expression<Func<T, object>>>? includes = null,
         List<Func<IQueryable<T>, IQueryable<T>>>? queries = null,
+        List<Expression<Func<T, bool>>>? predicates = null,
         int pageSize = 0,
         int pageNumber = 0);
 
@@ -26,7 +27,7 @@ public interface IGenericRepository<T>
     (
         Expression<Func<T, bool>> predicate,
         List<Func<IQueryable<T>, IQueryable<T>>>? queries = null,
-         Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
         bool firstRecord = true
     );
 

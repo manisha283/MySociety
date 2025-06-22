@@ -32,6 +32,7 @@ public class JwtService : IJwtService
         
         List<Claim>? claims = new()
         {
+            new("name", user.Name),
             new("email", email),
             new("role", role),
             new("roleId", user.RoleId.ToString()),
@@ -41,7 +42,7 @@ public class JwtService : IJwtService
             issuer: JwtConfig.Issuer,
             audience: JwtConfig.Audience,
             claims: claims,
-            expires: DateTime.Now.AddHours(JwtConfig.TokenDuration),
+            expires: DateTime.Now.AddDays(JwtConfig.TokenDuration),
             signingCredentials: credentials
         );
 

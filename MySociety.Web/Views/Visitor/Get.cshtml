@@ -1,0 +1,153 @@
+@using MySociety.Entity.Models
+@using MySociety.Entity.ViewModels
+@model VisitorVM
+
+@{
+    ViewData["Title"] = "Visitor";
+    int otherId = Model.VisitPurposes.Where(vp => vp.Name == "Other").Select(vp => vp.Id).FirstOrDefault();
+}
+
+<div class="container">
+    <!-- User heading, search and add button -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="blue-text mb-0 mt-3">New Visitor</h1>
+        </div>
+        <div>
+            <a asp-action="Index" asp-controller="Visitor" class="btn btn-custom">
+                <img class="text-white" src="~/images/icons/chevron-left-white.svg" alt="">
+                <span>Back</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="row bg-custom p-3 mx-0">
+
+        <form asp-action="Save" asp-controller="Visitor" method="post" enctype="multipart/form-data">
+
+            <input asp-for="Id" hidden>
+            @* <input asp-for="Image" type="file" id="profileImage" class="d-none"> *@
+
+            <div class="row">
+
+                <!-- Address -->
+                <div class="form-group mt-2 col-4">
+                    <label asp-for="Address.BlockId">Block*</label>
+                    <select asp-for="Address.BlockId" id="selectBlockId" class="form-select"
+                        aria-label="Default select example" onchange="getFloor()">
+                        <option selected value="-1">Select Block*</option>
+                        @foreach (var block in Model.Address.Blocks)
+                        {
+                            <option value="@block.Id">@block.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Address.BlockId" class="text-danger d-flex justify-content-start"></span>
+                </div>
+
+                <div class="form-group mt-2 col-4">
+                    <label asp-for="Address.FloorId">Floor*</label>
+                    <select asp-for="Address.FloorId" id="selectFloorId" class="form-select"
+                        aria-label="Default select example" disabled onchange="getHouse()">
+                        <option selected value="-1">Select Floor*</option>
+                        @foreach (var floor in Model.Address.Floors)
+                        {
+                            <option value="@floor.Id">@floor.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Address.FloorId" class="text-danger d-flex justify-content-start"></span>
+                </div>
+
+                <div class="form-group mt-2 col-4">
+                    <label asp-for="Address.HouseId">House*</label>
+                    <select asp-for="Address.HouseId" id="selectHouseId" class="form-select"
+                        aria-label="Default select example" disabled>
+                        <option selected value="-1">Select House*</option>
+                        @foreach (var floor in Model.Address.Floors)
+                        {
+                            <option value="@floor.Id">@floor.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Address.HouseId" class="text-danger d-flex justify-content-start"></span>
+                </div>
+
+                <div class="form-group col-6 mt-3">
+                    <label asp-for="Name">Name*</label>
+                    <input asp-for="Name" type="text" class="form-control" aria-describedby="Name">
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="form-group col-6 mt-3">
+                    <label asp-for="Phone">Phone Number*</label>
+                    <input asp-for="Phone" type="text" class="form-control" aria-describedby="Phone">
+                    <span asp-validation-for="Phone" class="text-danger"></span>
+                </div>
+
+                <div class="form-group col-6 mt-3">
+                    <label asp-for="NoOfVisitors">Number of Visitors*</label>
+                    <input asp-for="NoOfVisitors" type="number" class="form-control"
+                        aria-describedby="Number of Visitors" min="1">
+                    <span asp-validation-for="NoOfVisitors" class="text-danger"></span>
+                </div>
+
+                <div class="form-group col-6 mt-3">
+                    <label asp-for="VehicleNumber">Vehicle Number</label>
+                    <input asp-for="VehicleNumber" type="text" class="form-control" aria-describedby="Vehicle Number">
+                    <span asp-validation-for="VehicleNumber" class="text-danger"></span>
+                </div>
+
+                <div class="form-group col-6 mt-3">
+                    <label asp-for="VisitPurposeId">Visit Purpose*</label>
+                    <select asp-for="VisitPurposeId" id="selectVisitPurpose" class="form-select"
+                        aria-label="Visit Purpose">
+                        <option selected value="-1">Select Visit Purpose*</option>
+                        @foreach (VisitPurpose purpose in Model.VisitPurposes)
+                        {
+                            <option value="@purpose.Id">@purpose.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="VisitPurposeId" class="text-danger d-flex justify-content-start"></span>
+                </div>
+
+                <div class="form-group col-6 mt-3 d-none" id="visitReason">
+                    <label asp-for="VisitReason">Please specify the reason for the visit*</label>
+                    <input asp-for="VisitReason" type="text" class="form-control" aria-describedby="Visit Reason">
+                    <span asp-validation-for="VisitReason" class="text-danger"></span>
+                </div>
+
+
+
+            </div>
+
+            <div class="d-flex gap-3 mt-3 justify-content-end">
+                <button class="btn btn-custom" type="submit">
+                    Save
+                </button>
+                <button class="btn btn-custom-secondary" type="reset" onclick="clearValidation(), clearAddress()">
+                    Clear
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/address.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#selectVisitPurpose').on('change', function () {
+
+                var selectedValue = $(this).val();
+
+                if (Number(selectedValue) === @otherId) {
+                    $('#visitReason').removeClass('d-none');
+                } else {
+                    $('#visitReason input').val('');
+                    $('#visitReason').addClass('d-none');
+                }
+            });
+        });
+
+    </script>
+}

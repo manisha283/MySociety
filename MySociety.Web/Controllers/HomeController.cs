@@ -17,6 +17,7 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
+        ViewData["sidebar-active"] = "Dashboard";
         return View();
     }
 
