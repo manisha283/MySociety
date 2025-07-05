@@ -39,19 +39,39 @@ public static class EmailTemplateHelper
                       .Replace("{blockName}", registerVM.Address.BlockName)
                       .Replace("{floorName}", registerVM.Address.FloorName)
                       .Replace("{houseName}", registerVM.Address.HouseName)
-                      .Replace("{registeredOn}", DateTime.Now.ToString());
+                      .Replace("{registeredOn}", DateTime.Now.ToString())
+                      .Replace("{url}", CommonUrls.UserApproval.Replace("{0}", registerVM.Id.ToString()));
     }
 
-    public static string AdminApprovalNotification(string name)
+    public static string NewUserApproved(string name)
     {
-        string template = GetTemplateContent("AdminApprovalNotification");
+        string template = GetTemplateContent("NewUserApproved");
         return template.Replace("{name}", name)
-                      .Replace("{loginUrl}", CommonUrls.LoginUrl);
+                      .Replace("{url}", CommonUrls.Login);
+    }
+
+    public static string NewUserRejected(string name)
+    {
+        string template = GetTemplateContent("NewUserRejected");
+        return template.Replace("{name}", name);
     }
 
     public static string OtpVerification(string otp)
-   {
+    {
         string template = GetTemplateContent("OtpVerification");
         return template.Replace("{otp}", otp);
     }
+
+    public static string RegisteredSuccessfully(RegisterVM registerVM)
+    {
+        string template = GetTemplateContent("RegisteredSuccessfully");
+        return template.Replace("{name}", registerVM.Name)
+                      .Replace("{email}", registerVM.Email)
+                      .Replace("{blockName}", registerVM.Address.BlockName)
+                      .Replace("{floorName}", registerVM.Address.FloorName)
+                      .Replace("{houseName}", registerVM.Address.HouseName)
+                      .Replace("{registeredOn}", DateTime.Now.ToString());
+    }
+    
+
 }

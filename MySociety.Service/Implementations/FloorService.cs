@@ -28,6 +28,17 @@ public class FloorService : IFloorService
         return result.Records;
     }
 
+    public async Task<IEnumerable<Floor>> List()
+    {
+
+        DbResult<Floor> result = await _floorRepository.GetRecords(
+            predicate: f => f.DeletedBy == null,
+            orderBy: q => q.OrderBy(f => f.FloorNumber)
+        );
+
+        return result.Records;
+    }
+
     public async Task<int> GetNumberOfHouse(int blockId)
     {
         Floor? floor = await _floorRepository.GetByIdAsync(blockId);

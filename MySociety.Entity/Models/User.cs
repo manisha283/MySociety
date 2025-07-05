@@ -35,6 +35,16 @@ public partial class User
 
     public bool? IsApproved { get; set; }
 
+    public int? HouseUnitId { get; set; }
+
+    public virtual ICollection<AudienceGroup> AudienceGroupCreatedByNavigations { get; set; } = new List<AudienceGroup>();
+
+    public virtual ICollection<AudienceGroupMember> AudienceGroupMemberCreatedByNavigations { get; set; } = new List<AudienceGroupMember>();
+
+    public virtual ICollection<AudienceGroupMember> AudienceGroupMemberMembers { get; set; } = new List<AudienceGroupMember>();
+
+    public virtual ICollection<AudienceGroup> AudienceGroupUpdatedByNavigations { get; set; } = new List<AudienceGroup>();
+
     public virtual ICollection<Block> BlockCreatedByNavigations { get; set; } = new List<Block>();
 
     public virtual ICollection<Block> BlockUpdatedByNavigations { get; set; } = new List<Block>();
@@ -47,17 +57,23 @@ public partial class User
 
     public virtual ICollection<HouseMapping> HouseMappingCreatedByNavigations { get; set; } = new List<HouseMapping>();
 
-    public virtual ICollection<HouseMapping> HouseMappingOwners { get; set; } = new List<HouseMapping>();
-
-    public virtual ICollection<HouseMapping> HouseMappingTenants { get; set; } = new List<HouseMapping>();
-
     public virtual ICollection<HouseMapping> HouseMappingUpdatedByNavigations { get; set; } = new List<HouseMapping>();
+
+    public virtual HouseMapping? HouseUnit { get; set; }
 
     public virtual ICollection<House> HouseUpdatedByNavigations { get; set; } = new List<House>();
 
-    public virtual ICollection<NotificationMessage> NotificationMessageReceivers { get; set; } = new List<NotificationMessage>();
+    public virtual ICollection<NoticeAttachment> NoticeAttachments { get; set; } = new List<NoticeAttachment>();
 
-    public virtual ICollection<NotificationMessage> NotificationMessageSenders { get; set; } = new List<NotificationMessage>();
+    public virtual ICollection<NoticeAudienceMapping> NoticeAudienceMappings { get; set; } = new List<NoticeAudienceMapping>();
+
+    public virtual ICollection<Notice> NoticeCreatedByNavigations { get; set; } = new List<Notice>();
+
+    public virtual ICollection<Notice> NoticeUpdatedByNavigations { get; set; } = new List<Notice>();
+
+    public virtual ICollection<Notification> NotificationReceivers { get; set; } = new List<Notification>();
+
+    public virtual ICollection<Notification> NotificationSenders { get; set; } = new List<Notification>();
 
     public virtual Role Role { get; set; } = null!;
 

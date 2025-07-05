@@ -9,10 +9,10 @@ public class VisitorInfoVM
     public int NoOfVisitors { get; set; } = 1;
     public string? Vehicle { get; set; }
     public DateTime WaitingSince { get; set; }
+    public DateTime ArrivedAt { get; set; }
     public AddressVM Address { get; set; } = new();
     public bool? IsApprove { get; set; }
     public string ApprovalStatus { get; set; } = "";
     public DateTime? CheckIn { get; set; }
     public DateTime? CheckOut { get; set; }
-
 }

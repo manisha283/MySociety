@@ -17,6 +17,14 @@ public class HouseService : IHouseService
         _floorService = floorService;
     }
 
+    public async Task<IEnumerable<House>> List()
+    {
+        DbResult<House> dbResult = await _houseRepository.GetRecords(
+            predicate: f => f.DeletedBy == null,
+            orderBy: q => q.OrderBy(h => h.HouseNumber)
+        );
+        return dbResult.Records;
+    }
     public async Task<IEnumerable<House>> List(int floorId)
     {
         int NoOfHouse = await _floorService.GetNumberOfHouse(floorId);

@@ -1,15 +1,10 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MySociety.Entity.Data;
-using MySociety.Repository.Implementations;
-using MySociety.Repository.Interfaces;
 using MySociety.Service.Configuration;
-using MySociety.Service.Helper;
-using MySociety.Service.Implementations;
-using MySociety.Service.Interfaces;
+using MySociety.Web.Extensions;
 using MySociety.Web.Hubs;
 using MySociety.Web.Middlewares;
 using Serilog;
@@ -36,8 +31,6 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Logging.AddSerilog(Log.Logger);
 
-#region Service
-
 builder.Services.AddDbContext<MySocietyDbContext>(options => options.UseNpgsql(
     builder.Configuration.GetConnectionString("DbConnection")
 ));
@@ -48,30 +41,11 @@ builder.Services.AddControllersWithViews();
 //HttpContext
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-
-//Email Service 
+//Configuration
 EmailConfig.LoadEmailConfiguration(builder.Configuration);
-builder.Services.AddScoped<IEmailService, EmailService>();
-
-//Jwt Service
 JwtConfig.LoadJwtConfiguration(builder.Configuration);
-builder.Services.AddScoped<IJwtService, JwtService>();
 
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IHttpService, HttpService>();
-builder.Services.AddScoped<IBlockService, BlockService>();
-builder.Services.AddScoped<IFloorService, FloorService>();
-builder.Services.AddScoped<IHouseService, HouseService>();
-builder.Services.AddScoped<IHouseMappingService, HouseMappingService>();
-builder.Services.AddScoped<IRoleService, RoleService>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IVehicleService, VehicleService>();
-builder.Services.AddScoped<IProfileService, ProfileService>();
-builder.Services.AddScoped<IVisitorService, VisitorService>();
-builder.Services.AddScoped<IVisitorFeedbackService, VisitorFeedbackService>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddSingleton<IUserIdProvider, UserIdProvider>();
+builder.Services.AddProjectServices();
 
 builder.Services.AddSignalR();
 
@@ -86,7 +60,7 @@ builder.Services.AddSession(options =>
 //Authentication
 if (string.IsNullOrEmpty(JwtConfig.Key))   // Ensure Key is Not Null or Empty
 {
-    throw new InvalidOperationException("JWT Secret Key is missing in appsettings.json");
+    throw new InvalidOperationException("JWT Secret Key is missing");
 }
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -120,7 +94,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 
 builder.Services.AddAuthorization();
-#endregion
 
 var app = builder.Build();
 
@@ -151,6 +124,19 @@ app.UseStatusCodePagesWithReExecute("/Auth/Error/{0}");
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseAuthentication();
+
+app.Use(async (context, next) =>
+{
+    await next();
+
+    if (context.Response.StatusCode == 401 && 
+        !context.Request.Path.StartsWithSegments("/api"))
+    {
+        var returnUrl = context.Request.Path + context.Request.QueryString;
+        context.Response.Redirect($"/Auth/Login?returnUrl={Uri.EscapeDataString(returnUrl)}");
+    }
+});
+
 app.UseAuthorization();
 
 app.MapHub<NotificationHub>("/notificationHub");

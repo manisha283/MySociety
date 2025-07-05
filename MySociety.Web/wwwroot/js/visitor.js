@@ -15,7 +15,7 @@ function paginationAjax(pageNumber) {
     Column: sortingColumn,
     Sort: sortingOrder,
     Search: $("#searchQuery").val(),
-    Status: $("#approvalStatus").val(),
+    VisitorStatus: $("#visitorStatus").val(),
     DateRange: $("#dateRange").val(),
     FromDate: $("#fromDate").val(),
     ToDate: $("#toDate").val(),
@@ -28,8 +28,8 @@ function paginationAjax(pageNumber) {
     data: { filter },
     type: "POST",
     dataType: "html",
-    success: function (data) {
-      $("#tableContent").html(data);
+    success: function (response) {
+      $("#tableContent").html(response);
       resetSortingIcon();
     },
     error: function () {
@@ -60,6 +60,8 @@ $(document).on("click", "#confirmReject", function () {
   visitorStatus(rejectVisitorId, false);
 });
 
+let redirectToList;
+
 // Change Visitor Status
 function visitorStatus(visitorId, isApproved) {
   $.ajax({
@@ -72,6 +74,14 @@ function visitorStatus(visitorId, isApproved) {
     success: function (response) {
       if (response.success) {
         toastr.success(response.message);
+        if (redirectToList) {
+          // Redirect to list after short delay
+          setTimeout(function () {
+            window.location.href = "/Visitor/Index";
+          }, 1500); // Delay to allow toast to show
+        } else {
+          paginationAjax(1); // Refresh list
+        }
         paginationAjax(1);
       } else {
         toastr.error(response.message);
@@ -83,91 +93,29 @@ function visitorStatus(visitorId, isApproved) {
   });
 }
 
-function updateTimeDifference() {
-  $(".waiting-time").each(function () {
-    var $element = $(this);
-    var arrivalTime = new Date($element.data("time"));
-    var now = new Date();
-    var diffInSeconds = Math.floor((now - arrivalTime) / 1000);
-
-    if (diffInSeconds < 0) {
-      $element.text("Just now");
-      return;
-    }
-
-    var hours = Math.floor(diffInSeconds % (24 * 3600));
-
-    // if (hours > 1) {
-    //   paginationAjax(1);
-    //   return;
-    // }
-
-    var minutes = Math.floor((diffInSeconds % 3600) / 60);
-    var seconds = diffInSeconds % 60;
-
-    $element.text(`${minutes}m ${seconds}s`);
-  });
-}
-
 function resetFilters() {
   $("#searchQuery").val("");
-  $("#approvalStatus").val("Pending");
+  $("#visitorStatus").val("Pending");
   $("#dateRange").val("All");
   $("#checkOutStatus").val("All");
   $("#visitPurpose").val("All");
   $("#fromDate").val("");
   $("#toDate").val("");
+  $(".customDate").addClass("d-none");
   paginationAjax(1);
 }
 
-//Applying Filter
-$(document).on("change", "#dateRange", function () {
-  if ($(this).val() == "CustomDate") {
-    $("#fromDate").val("");
-    $("#toDate").val("");
-    let today = new Date().toISOString().split("T")[0];
-    $("#fromDate, #toDate").attr("max", today);
-    $("#customDateRange").modal("show");
-  } else {
-    paginationAjax(1);
-  }
-});
-
-//Selecting custom date range
-$(document).on("click", "#customDateSubmit", function () {
-  $("#customDateRange").modal("hide");
-  paginationAjax(1);
-});
-
-//Close custom date modal
-$(document).on("click", "#customDateClose, #customDateCancel", function () {
-  $("#customDateRange").modal("hide");
-  $("#dateRange").val($("#dateRange option:first").val());
-  paginationAjax(1);
-});
-
-// Validate Date
-$(document).on("change", "#fromDate", function () {
-  let fromDate = $(this).val();
-  $("#toDate").attr("min", fromDate); // Restrict "To Date" to not be before "From Date"
-});
-
-$(document).on("change", "#toDate", function () {
-  let toDate = $(this).val();
-  $("#fromDate").attr("max", toDate); // Restrict "From Date" to not be after "To Date"
-});
-
 $(document).on("change", "#checkOutStatus", function () {
   if ($(this).val() == "All") {
-    $("#approvalStatus").val("All");
+    $("#visitorStatus").val("All");
   } else {
-    $("#approvalStatus").val("Approved");
+    $("#visitorStatus").val("Approved");
   }
 
   paginationAjax(1);
 });
 
-$(document).on("change", "#approvalStatus", function () {
+$(document).on("change", "#visitorStatus", function () {
   if ($(this).val() != "Approved" && $(this).val() != "All") {
     $("#checkOutStatus").val("All");
   }
@@ -222,6 +170,22 @@ function checkOut() {
   });
 }
 
+function VisitorStatusExpired(id) {
+  $.ajax({
+    url: "/Visitor/VisitorStatusExpired",
+    method: "POST",
+    data: {
+      id: id,
+    },
+    success: function () {
+      paginationAjax(1);
+    },
+    error: function () {
+      console.log("Error occurred Vistor status not changed!");
+    },
+  });
+}
+
 // clear all values when visitor review modal is closed
 $("#visitorReviewModal").on("hidden.bs.modal", function () {
   $("#nameVisitorModal").text("");
@@ -232,5 +196,38 @@ function clearReview() {
   $("#visitorReview").val("");
   $(".star-rating").each(function () {
     $(this).addClass("fa-star-o").removeClass("fa-star");
+  });
+}
+
+function updateTimeDifference() {
+  $(".waiting-time").each(function () {
+    var $element = $(this);
+    var arrivalTime = new Date($element.data("time"));
+    var now = new Date();
+    var diffInSeconds = Math.floor((now - arrivalTime) / 1000);
+
+    if (diffInSeconds < 0) {
+      $element.text("Just now");
+      return;
+    }
+
+    var minutes = Math.floor((diffInSeconds % 3600));
+    var seconds = diffInSeconds % 60;
+
+    $element.text(`${minutes}m ${seconds}s`);
+
+    if (minutes <= 10 && role === "Security") {
+      $element
+        .closest("tr")
+        .find(".btn-approve, .btn-reject")
+        .addClass("d-none");
+    }
+
+    debugger;
+
+    if (minutes >= 30) {
+      VisitorStatusExpired($element.closest("tr").data("id"));
+    }
+  
   });
 }

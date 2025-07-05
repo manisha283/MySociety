@@ -1,0 +1,67 @@
+@using MySociety.Entity.Models
+@model List<NotificationCategory>
+
+@{
+    ViewData["Title"] = "Notification";
+    Layout = "_Layout";
+}
+
+<div>
+    <h1 class="blue-text text-nowrap mt-3">Notifications List</h1>
+</div>
+
+<div class=" d-flex align-items-center div-filter row">
+
+    <div class="col-3 mb-2">
+        <label for="selectReadStatus">Message Read Status</label>
+        <select class="form-select" id="selectReadStatus" aria-label="Select read status" onchange="paginationAjax(1)">
+            <option value="All">All</option>
+            <option selected value="Unread">Unread</option>
+            <option value="Read">Read</option>
+        </select>
+    </div>
+
+    <div class="col-3 mb-2">
+        <label for="selectNotificationCategory">Notification Category</label>
+        <select class="form-select" id="selectNotificationCategory" aria-label="Select read status" onchange="paginationAjax(1)">
+            <option selected value="-1">All</option>
+            @foreach (var category in Model)
+            {
+                <option value="@category.Id">@category.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-3 mb-2">
+        <label for="dateRange">Date Range</label>
+        <select class="form-select" id="dateRange" aria-label="Select Date Range" onchange="paginationAjax(1)">
+            <option selected value="All">All Time</option>
+            <option value="Today">Today</option>
+            <option value="Last7Days">Last 7 Days</option>
+            <option value="Last30Days">Last 30 Days</option>
+            <option value="CurrentMonth">Current Month</option>
+            <option value="CustomDate">Custom Date</option>
+        </select>
+    </div>
+
+    <div class="col-3 mb-2 customDate d-none">
+        <label for="fromDate">From Date</label>
+        <input type="date" class="form-control" id="fromDate" placeholder="">
+    </div>
+
+    <div class=" col-3 mb-2 customDate d-none">
+        <label for="toDate">To Date</label>
+        <input type="date" class="form-control" id="toDate" placeholder="">
+    </div>
+
+</div>
+
+<!-- Table -->
+<div class="bg-custom px-3 mt-3" id="tableContent">
+    <!-- Partial View -->
+</div>
+
+@section Scripts {
+
+    <script src="~/js/notifications.js"></script>
+}

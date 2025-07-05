@@ -32,4 +32,7 @@ public interface IGenericRepository<T>
     );
 
     Task UpdateAsync(T entity);
+    Task UpdateRangeAsync(IEnumerable<T> entities);
+
+    int GetCount(Expression<Func<T, bool>>? predicate = null);
 }

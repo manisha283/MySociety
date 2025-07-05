@@ -155,4 +155,23 @@ public class GenericRepository<T> : IGenericRepository<T>
         _dbSet.Update(entity);
         await _context.SaveChangesAsync();
     }
+
+    public int GetCount(Expression<Func<T, bool>>? predicate = null)
+    {
+        IQueryable<T> records = _dbSet;
+
+        //Apply Filters
+        if (predicate != null)
+        {
+            records = records.Where(predicate);
+        }
+
+        return records.Count();
+    }
+
+    public async Task UpdateRangeAsync(IEnumerable<T> entities)
+    {
+        _dbSet.UpdateRange(entities);
+        await _context.SaveChangesAsync();
+    }
 }

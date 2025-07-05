@@ -16,6 +16,12 @@ public partial class MySocietyDbContext : DbContext
     {
     }
 
+    public virtual DbSet<AudienceGroup> AudienceGroups { get; set; }
+
+    public virtual DbSet<AudienceGroupMember> AudienceGroupMembers { get; set; }
+
+    public virtual DbSet<AudienceGroupType> AudienceGroupTypes { get; set; }
+
     public virtual DbSet<Block> Blocks { get; set; }
 
     public virtual DbSet<Floor> Floors { get; set; }
@@ -24,7 +30,17 @@ public partial class MySocietyDbContext : DbContext
 
     public virtual DbSet<HouseMapping> HouseMappings { get; set; }
 
-    public virtual DbSet<NotificationMessage> NotificationMessages { get; set; }
+    public virtual DbSet<Notice> Notices { get; set; }
+
+    public virtual DbSet<NoticeAttachment> NoticeAttachments { get; set; }
+
+    public virtual DbSet<NoticeAudienceMapping> NoticeAudienceMappings { get; set; }
+
+    public virtual DbSet<NoticeCategory> NoticeCategories { get; set; }
+
+    public virtual DbSet<Notification> Notifications { get; set; }
+
+    public virtual DbSet<NotificationCategory> NotificationCategories { get; set; }
 
     public virtual DbSet<ResetPasswordToken> ResetPasswordTokens { get; set; }
 
@@ -44,11 +60,91 @@ public partial class MySocietyDbContext : DbContext
 
     public virtual DbSet<VisitorFeedback> VisitorFeedbacks { get; set; }
 
+    public virtual DbSet<VisitorStatus> VisitorStatuses { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseNpgsql("Name=ConnectionStrings:DbConnection");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<AudienceGroup>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("AudienceGroups_pkey");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.DeletedAt)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("deleted_at");
+            entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(e => e.Description)
+                .HasMaxLength(500)
+                .HasColumnName("description");
+            entity.Property(e => e.GroupName)
+                .HasMaxLength(100)
+                .HasColumnName("group_name");
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("updated_at");
+            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.AudienceGroupCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("AudienceGroups_created_by_fkey");
+
+            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.AudienceGroupUpdatedByNavigations)
+                .HasForeignKey(d => d.UpdatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("AudienceGroups_updated_by_fkey");
+        });
+
+        modelBuilder.Entity<AudienceGroupMember>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("AudienceGroupMembers_pkey");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.AudienceGroupId).HasColumnName("audience_group_id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.DeletedAt)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("deleted_at");
+            entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(e => e.MemberId).HasColumnName("member_id");
+
+            entity.HasOne(d => d.AudienceGroup).WithMany(p => p.AudienceGroupMembers)
+                .HasForeignKey(d => d.AudienceGroupId)
+                .HasConstraintName("AudienceGroupMembers_audience_group_id_fkey");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.AudienceGroupMemberCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("AudienceGroupMembers_created_by_fkey");
+
+            entity.HasOne(d => d.Member).WithMany(p => p.AudienceGroupMemberMembers)
+                .HasForeignKey(d => d.MemberId)
+                .HasConstraintName("AudienceGroupMembers_member_id_fkey");
+        });
+
+        modelBuilder.Entity<AudienceGroupType>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("AudienceGroupTypes_pkey");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .HasColumnName("name");
+        });
+
         modelBuilder.Entity<Block>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("Blocks_pkey");
@@ -178,8 +274,6 @@ public partial class MySocietyDbContext : DbContext
             entity.Property(e => e.HouseName)
                 .HasMaxLength(15)
                 .HasColumnName("house_name");
-            entity.Property(e => e.OwnerId).HasColumnName("owner_id");
-            entity.Property(e => e.TenantId).HasColumnName("tenant_id");
             entity.Property(e => e.UpdatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp without time zone")
@@ -206,45 +300,176 @@ public partial class MySocietyDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("HouseMapping_house_id_fkey");
 
-            entity.HasOne(d => d.Owner).WithMany(p => p.HouseMappingOwners)
-                .HasForeignKey(d => d.OwnerId)
-                .HasConstraintName("HouseMapping_owner_id_fkey");
-
-            entity.HasOne(d => d.Tenant).WithMany(p => p.HouseMappingTenants)
-                .HasForeignKey(d => d.TenantId)
-                .HasConstraintName("HouseMapping_tenant_id_fkey");
-
             entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.HouseMappingUpdatedByNavigations)
                 .HasForeignKey(d => d.UpdatedBy)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("HouseMapping_updated_by_fkey");
         });
 
-        modelBuilder.Entity<NotificationMessage>(entity =>
+        modelBuilder.Entity<Notice>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("NotificationMessages_pkey");
+            entity.HasKey(e => e.Id).HasName("Notices_pkey");
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("created_at");
-            entity.Property(e => e.IsRead).HasColumnName("is_read");
-            entity.Property(e => e.Message)
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.DeletedAt)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("deleted_at");
+            entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(e => e.Description)
                 .HasColumnType("character varying")
+                .HasColumnName("description");
+            entity.Property(e => e.NoticeCategoryId).HasColumnName("notice_category_id");
+            entity.Property(e => e.Title)
+                .HasMaxLength(100)
+                .HasColumnName("title");
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("updated_at");
+            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.NoticeCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("Notices_created_by_fkey");
+
+            entity.HasOne(d => d.NoticeCategory).WithMany(p => p.Notices)
+                .HasForeignKey(d => d.NoticeCategoryId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("Notices_notice_category_id_fkey");
+
+            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.NoticeUpdatedByNavigations)
+                .HasForeignKey(d => d.UpdatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("Notices_updated_by_fkey");
+        });
+
+        modelBuilder.Entity<NoticeAttachment>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("NoticeAttachments_pkey");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.DeletedAt)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("deleted_at");
+            entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(e => e.Name)
+                .HasColumnType("character varying")
+                .HasColumnName("name");
+            entity.Property(e => e.NoticeId).HasColumnName("notice_id");
+            entity.Property(e => e.Path).HasColumnName("path");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.NoticeAttachments)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("NoticeAttachments_created_by_fkey");
+
+            entity.HasOne(d => d.Notice).WithMany(p => p.NoticeAttachments)
+                .HasForeignKey(d => d.NoticeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("NoticeAttachments_notice_id_fkey");
+        });
+
+        modelBuilder.Entity<NoticeAudienceMapping>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("NoticeAudienceMapping_pkey");
+
+            entity.ToTable("NoticeAudienceMapping");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.DeletedAt)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("deleted_at");
+            entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
+            entity.Property(e => e.GroupTypeId).HasColumnName("group_type_id");
+            entity.Property(e => e.NoticeId).HasColumnName("notice_id");
+            entity.Property(e => e.ReferenceId).HasColumnName("reference_id");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.NoticeAudienceMappings)
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("NoticeAudienceMapping_created_by_fkey");
+
+            entity.HasOne(d => d.GroupType).WithMany(p => p.NoticeAudienceMappings)
+                .HasForeignKey(d => d.GroupTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("NoticeAudienceMapping_group_type_id_fkey");
+
+            entity.HasOne(d => d.Notice).WithMany(p => p.NoticeAudienceMappings)
+                .HasForeignKey(d => d.NoticeId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("NoticeAudienceMapping_notice_id_fkey");
+        });
+
+        modelBuilder.Entity<NoticeCategory>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("NoticeCategories_pkey");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .HasColumnName("name");
+        });
+
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("Notifications_pkey");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("created_at");
+            entity.Property(e => e.Message)
+                .HasMaxLength(500)
                 .HasColumnName("message");
+            entity.Property(e => e.ReadAt)
+                .HasColumnType("timestamp without time zone")
+                .HasColumnName("read_at");
             entity.Property(e => e.ReceiverId).HasColumnName("receiver_id");
             entity.Property(e => e.SenderId).HasColumnName("sender_id");
+            entity.Property(e => e.TargetEntity)
+                .HasMaxLength(100)
+                .HasColumnName("target_entity");
+            entity.Property(e => e.TargetEntityId).HasColumnName("target_entity_id");
+            entity.Property(e => e.TargetId).HasColumnName("target_id");
+            entity.Property(e => e.TargetUrl)
+                .HasMaxLength(500)
+                .HasColumnName("target_url");
 
-            entity.HasOne(d => d.Receiver).WithMany(p => p.NotificationMessageReceivers)
+            entity.HasOne(d => d.Receiver).WithMany(p => p.NotificationReceivers)
                 .HasForeignKey(d => d.ReceiverId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("NotificationMessages_receiver_id_fkey");
+                .HasConstraintName("Notifications_receiver_id_fkey");
 
-            entity.HasOne(d => d.Sender).WithMany(p => p.NotificationMessageSenders)
+            entity.HasOne(d => d.Sender).WithMany(p => p.NotificationSenders)
                 .HasForeignKey(d => d.SenderId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("NotificationMessages_sender_id_fkey");
+                .HasConstraintName("Notifications_sender_id_fkey");
+        });
+
+        modelBuilder.Entity<NotificationCategory>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("NotificationCategories_pkey");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .HasColumnName("name");
         });
 
         modelBuilder.Entity<ResetPasswordToken>(entity =>
@@ -297,6 +522,7 @@ public partial class MySocietyDbContext : DbContext
             entity.Property(e => e.Email)
                 .HasColumnType("character varying")
                 .HasColumnName("email");
+            entity.Property(e => e.HouseUnitId).HasColumnName("house_unit_id");
             entity.Property(e => e.IsActive)
                 .IsRequired()
                 .HasDefaultValueSql("true")
@@ -320,6 +546,10 @@ public partial class MySocietyDbContext : DbContext
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("updated_at");
             entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+
+            entity.HasOne(d => d.HouseUnit).WithMany(p => p.Users)
+                .HasForeignKey(d => d.HouseUnitId)
+                .HasConstraintName("Users_house_unit_id_fkey");
 
             entity.HasOne(d => d.Role).WithMany(p => p.Users)
                 .HasForeignKey(d => d.RoleId)
@@ -445,7 +675,6 @@ public partial class MySocietyDbContext : DbContext
                 .HasColumnName("deleted_at");
             entity.Property(e => e.DeletedBy).HasColumnName("deleted_by");
             entity.Property(e => e.HouseMappingId).HasColumnName("house_mapping_id");
-            entity.Property(e => e.IsApproved).HasColumnName("is_approved");
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
@@ -453,6 +682,7 @@ public partial class MySocietyDbContext : DbContext
             entity.Property(e => e.Phone)
                 .HasColumnType("character varying")
                 .HasColumnName("phone");
+            entity.Property(e => e.StatusId).HasColumnName("status_id");
             entity.Property(e => e.UpdatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp without time zone")
@@ -470,6 +700,11 @@ public partial class MySocietyDbContext : DbContext
                 .HasForeignKey(d => d.HouseMappingId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("Visitors_house_mapping_id_fkey");
+
+            entity.HasOne(d => d.Status).WithMany(p => p.Visitors)
+                .HasForeignKey(d => d.StatusId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("Visitors_status_id_fkey");
 
             entity.HasOne(d => d.VisitPurpose).WithMany(p => p.Visitors)
                 .HasForeignKey(d => d.VisitPurposeId)
@@ -492,6 +727,18 @@ public partial class MySocietyDbContext : DbContext
                 .HasForeignKey(d => d.VisitorId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("VisitorFeedbacks_visitor_id_fkey");
+        });
+
+        modelBuilder.Entity<VisitorStatus>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("VisitorStatus_pkey");
+
+            entity.ToTable("VisitorStatus");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .HasColumnName("name");
         });
 
         OnModelCreatingPartial(modelBuilder);

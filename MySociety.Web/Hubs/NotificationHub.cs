@@ -7,11 +7,17 @@ namespace MySociety.Web.Hubs;
 [Authorize]
 public class NotificationHub : Hub
 {
+    // public async Task SendNotificationToUser(string targetUserId, string message)
+    // {
+    //     // Send notification to the specific user identified by their user ID
+    //     await Clients.User(targetUserId).SendAsync("ReceiveNotification",
+    //         Context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value, message);
+    // }
+
     public async Task SendNotificationToUser(string targetUserId, string message)
     {
         // Send notification to the specific user identified by their user ID
-        await Clients.User(targetUserId).SendAsync("ReceiveNotification",
-            Context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value, message);
+        await Clients.User(targetUserId.ToString()).SendAsync("ReceiveNotification", message);
     }
 
     public override async Task OnConnectedAsync()

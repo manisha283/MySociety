@@ -2,17 +2,22 @@ using Microsoft.AspNetCore.SignalR;
 using MySociety.Service.Interfaces;
 namespace MySociety.Web.Hubs;
 
-public class NotificationService : INotificationService
+public class NotificationHubService : INotificationHubService
 {
     private readonly IHubContext<NotificationHub> _hubContext;
 
-    public NotificationService(IHubContext<NotificationHub> hubContext)
+    public NotificationHubService(IHubContext<NotificationHub> hubContext)
     {
         _hubContext = hubContext;
     }
 
-    public async Task SendToUserAsync(string userId, string message)
+    public async Task NotifyUser(int userId, string message)
     {
-        await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification", message);
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return;
+        }
+
+        await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", message);
     }
 }

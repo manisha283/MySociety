@@ -19,11 +19,15 @@ public class RoleService : IRoleService
         return role.Name;
     }
 
+    public async Task<int> Get(string name)
+    {
+        Role role = await _roleRepository.GetByStringAsync(r => r.Name == name) ?? new();
+        return role.Id;
+    }
+
     public IEnumerable<Role> List()
     {
         IEnumerable<Role> list = _roleRepository.GetAll();
         return list;
     }
-
-
 }

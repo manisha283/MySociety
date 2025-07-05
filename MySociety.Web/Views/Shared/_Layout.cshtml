@@ -26,7 +26,7 @@
 
     <div class="h-100">
         <!-- Navbar starts -->
-        <nav class="position-fixed w-100 bg-custom-secondary py-2 nav-custom">
+        <nav class="position-fixed w-100 bg-custom-secondary py-1 nav-custom">
             <div class="d-flex justify-content-between align-items-center pe-3">
                 <div class="d-flex align-items-center">
                     <button class="btn" type="button" id="toggleSidebarBtn">
@@ -37,21 +37,22 @@
                 </div>
 
                 <div class="d-flex align-items-center">
-                    @if (User.IsInRole("Admin"))
-                    {
-                        <a asp-action="Index" asp-controller="AdminPanel"
-                            class="fs-5 ps-2 text-white text-decoration-none">Admin</a>
-                    }
 
-                    <div class="position-relative me-3">
-                        <button id="notificationButton" class="btn position-relative">
-                            <i class="fa fa-bell text-white fs-4"></i>
-                            <span id="notificationBadge"
-                                @* class="notificationBadgeposition-absolute translate-middle badge rounded-pill bg-danger"> *@
-                                class="notificationBadge badge rounded-pill bg-danger">
+                    <div class="dropdown">
+                        <button class="btn" type="button" id="notificationDropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false" onclick="updateNotificationDropdown()">
+                            <i class="bi bi-bell-fill text-white fs-3"></i>
+                            <span id="notificationCount"
+                                class="position-absolute translate-middle badge rounded-pill bg-danger" data-number="0">
                                 0
+                                <span class="visually-hidden">Unread notifications</span>
                             </span>
                         </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown"
+                            id="notificationList" style="width: 350px;">
+                            <li><span class="dropdown-item-text">Loading...</span></li>
+                        </ul>
                     </div>
 
                     <div class="btn-group">
@@ -114,6 +115,23 @@
                             Dashboard
                         </a>
 
+                        <a asp-action="Index" asp-controller="Notifications"
+                            class=" @((ViewData["sidebar-active"] as string) == "Notifications" ? "side-dash" : "")">
+                            <img src="~/images/navigation/visitors.svg" alt=""
+                                class=" @((ViewData["sidebar-active"] as string) == "Notifications" ? "filter-custom" : "")">
+                            Notifications
+                        </a>
+
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a asp-action="Index" asp-controller="Members"
+                                class=" @((ViewData["sidebar-active"] as string) == "Members" ? "side-dash" : "")">
+                                <img src="~/images/navigation/members.svg" alt=""
+                                    class=" @((ViewData["sidebar-active"] as string) == "Members" ? "filter-custom" : "")">
+                                Members
+                            </a>
+                        }
+
                         <a asp-action="Index" asp-controller="Visitor"
                             class=" @((ViewData["sidebar-active"] as string) == "Visitors" ? "side-dash" : "")">
                             <img src="~/images/navigation/visitors.svg" alt=""
@@ -121,30 +139,38 @@
                             Visitors
                         </a>
 
-                        <a asp-action="Role" asp-controller="RolePermission"
+                        <a asp-action="Index" asp-controller="Report"
+                            class=" @((ViewData["sidebar-active"] as string) == "Report" ? "side-dash" : "")">
+                            <img src="~/images/navigation/reports.svg" alt=""
+                                class=" @((ViewData["sidebar-active"] as string) == "Report" ? "filter-custom" : "")">
+                            Reports
+                        </a>
+
+                        <a asp-action="Index" asp-controller="Notices"
+                            class="@((ViewData["sidebar-active"] as string) == "Notices" ? "side-dash" : "")">
+                            <img src="~/images/navigation/notices.svg" alt=""
+                                class=" @((ViewData["sidebar-active"] as string) == "Notices" ? "filter-custom" : "")">
+                            Notices
+                        </a>
+
+                        <a asp-action="Index" asp-controller="Complaints"
                             class="@((ViewData["sidebar-active"] as string) == "RolePermission" ? "side-dash" : "")">
                             <img src="~/images/navigation/role.svg" alt=""
-                                class=" @((ViewData["sidebar-active"] as string) == "RolePermission" ? "blue" : "")">
+                                class=" @((ViewData["sidebar-active"] as string) == "RolePermission" ? "filter-custom" : "")">
                             Complaints
                         </a>
 
-                        <a asp-action="Index" asp-controller="Menu"
-                            class="@((ViewData["sidebar-active"] as string) == "Menu" ? "side-dash" : "")">
-                            <img src="~/images/navigation/notices.svg" alt=""
-                                class=" @((ViewData["sidebar-active"] as string) == "Menu" ? "blue" : "")"> Notices
-                        </a>
-
-                        <a asp-action="Index" asp-controller="Taxes"
-                            class="@((ViewData["sidebar-active"] as string) == "Taxes" ? "side-dash" : "")">
+                        <a asp-action="Index" asp-controller="Maintenance"
+                            class="@((ViewData["sidebar-active"] as string) == "Maintenance" ? "side-dash" : "")">
                             <img src="~/images/navigation/taxes.svg" alt=""
-                                class="@((ViewData["sidebar-active"] as string) == "Taxes" ? "blue" : "")">
+                                class="@((ViewData["sidebar-active"] as string) == "Maintenance" ? "filter-custom" : "")">
                             Maintenance
                         </a>
 
-                        <a asp-action="Index" asp-controller="Taxes"
-                            class="@((ViewData["sidebar-active"] as string) == "Taxes" ? "side-dash" : "")">
+                        <a asp-action="Index" asp-controller="Parking"
+                            class="@((ViewData["sidebar-active"] as string) == "Parking" ? "side-dash" : "")">
                             <img src="~/images/navigation/parking.svg" alt=""
-                                class="@((ViewData["sidebar-active"] as string) == "Taxes" ? "blue" : "")">
+                                class="@((ViewData["sidebar-active"] as string) == "Parking" ? "filter-custom" : "")">
                             Parking
                         </a>
 
@@ -152,7 +178,7 @@
                         <a asp-action="Index" asp-controller="Events"
                             class="@((ViewData["sidebar-active"] as string) == "Events" ? "side-dash" : "")">
                             <img src="~/images/navigation/events.svg" alt=""
-                                class="@((ViewData["sidebar-active"] as string) == "Events" ? "blue" : "")">
+                                class="@((ViewData["sidebar-active"] as string) == "Events" ? "filter-custom" : "")">
                             Events
                         </a>
 
@@ -221,12 +247,57 @@
         </div>
     </div>
 
+    <!-- Approve visitor Modal-->
+    <div class="modal fade" id="approveVisitorModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="approveVisitorModalTitle">Visitor Details</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body d-flex flex-column justify-content-center align-items-center">
+
+                </div>
+                <div class="modal-footer d-flex justify-content-center" id="approveVisitorModalFooter">
+                    <button type="button" class="btn btn-custom btn-yes" data-bs-dismiss="modal">Yes</button>
+                    <button type="button" class="btn btn-custom-secondary btn-no" data-bs-dismiss="modal">No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="visitorRequestModal" tabindex="-1" aria-labelledby="visitorRequestLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-3">
+                <div class="modal-header bg-custom">
+                    <h5 class="modal-title" id="visitorRequestLabel">Visitor Approval Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p><strong>Name:</strong> Manisha</span></p>
+                    <p><strong>Phone Number:</strong> 9874589652</span></p>
+                    <p><strong>Number of Visitors:</strong> 2</span></p>
+                    <p><strong>Vehicle Number:</strong> GJ01AB9898</span></p>
+                    <p><strong>Visit Purpose:</strong> Meeting</span></p>
+                </div>
+
+                <div class="modal-footer d-flex justify-content-center">
+                    <button type="button" class="btn btn-approve" id="approveVisitorBtn">Approve</button>
+                    <button type="button" class="btn btn-reject" id="rejectVisitorBtn">Reject</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/modal.js" asp-append-version="true"></script>
-    <script src="~/js/notification.js" asp-append-version="true"></script>
+    <script src="~/js/signalR.js" asp-append-version="true"></script>
     @await Html.PartialAsync("_ValidationScriptsPartial")
     @await RenderSectionAsync("Scripts", required: false)
 </body>

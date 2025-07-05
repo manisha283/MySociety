@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using MySociety.Entity.HelperModels;
 using MySociety.Entity.Models;
 using MySociety.Entity.ViewModels;
@@ -19,8 +20,12 @@ public class VisitorService : IVisitorService
     private readonly IHouseMappingService _houseMappingService;
     private readonly IHttpService _httpService;
     private readonly IVisitorFeedbackService _feedbackService;
+    private readonly IUserService _userService;
+    private readonly IRoleService _roleService;
+    private readonly INotificationService _notificationService;
+    private readonly IGenericRepository<VisitorStatus> _visitorStatusRepository;
 
-    public VisitorService(IGenericRepository<Visitor> visitorRepository, IGenericRepository<VisitPurpose> visitPurposeRepository, IBlockService blockService, IHouseMappingService houseMappingService, IHttpService httpService, IVisitorFeedbackService feedbackService)
+    public VisitorService(IGenericRepository<Visitor> visitorRepository, IGenericRepository<VisitPurpose> visitPurposeRepository, IBlockService blockService, IHouseMappingService houseMappingService, IHttpService httpService, IVisitorFeedbackService feedbackService, IUserService userService, IRoleService roleService, INotificationService notificationService, IGenericRepository<VisitorStatus> visitorStatusRepository)
     {
         _visitorRepository = visitorRepository;
         _visitPurposeRepository = visitPurposeRepository;
@@ -28,8 +33,13 @@ public class VisitorService : IVisitorService
         _houseMappingService = houseMappingService;
         _httpService = httpService;
         _feedbackService = feedbackService;
+        _userService = userService;
+        _roleService = roleService;
+        _notificationService = notificationService;
+        _visitorStatusRepository = visitorStatusRepository;
 
     }
+
     public async Task<VisitorVM> Get(int id)
     {
         VisitorVM visitorVM = new()
@@ -41,19 +51,63 @@ public class VisitorService : IVisitorService
             }
         };
 
-        Visitor? visitor = await _visitorRepository.GetByIdAsync(id);
+        Visitor? visitor = await _visitorRepository.GetByStringAsync(
+                            predicate: v => v.Id == id,
+                            queries: new List<Func<IQueryable<Visitor>, IQueryable<Visitor>>>
+                            {
+                                q => q.Include(v => v.VisitPurpose),
+                                q => q.Include(v => v.VisitorFeedbacks),
+                                q => q.Include(v => v.Status)
+                            });
 
         if (visitor == null)
         {
             return visitorVM;
         }
 
+        visitorVM.Id = visitor.Id;
         visitorVM.Name = visitor.Name;
         visitorVM.Phone = visitor.Phone;
         visitorVM.VisitPurposeId = visitor.VisitPurposeId;
         visitorVM.VisitReason = visitor.VisitPurposeReason;
         visitorVM.NoOfVisitors = visitor.NoOfVisitors;
         visitorVM.VehicleNumber = visitor.VehicleNo;
+        visitorVM.ApprovalStatus = visitor.Status.Name;
+        visitorVM.CreatedAt = visitor.CreatedAt;
+        visitorVM.CheckIn = visitor.CheckInTime;
+        visitorVM.CheckOut = visitor.CheckOutTime;
+        visitorVM.Address = await _houseMappingService.GetAddress(visitor.HouseMappingId);
+        visitorVM.Address.Blocks = await _blockService.List();
+        visitorVM.VisitPurpose = visitor.VisitPurpose.Name == "Other" ? visitor.VisitPurposeReason : visitor.VisitPurpose.Name;
+
+        // if (visitor.IsApproved == null && (DateTime.Now - visitor.CreatedAt).TotalMinutes <= 30)
+        // {
+        //     visitorVM.ApprovalStatus = ApprovalStatus.Pending.ToString();
+        // }
+        // else if (visitor.IsApproved == true)
+        // {
+        //     visitorVM.ApprovalStatus = ApprovalStatus.Approved.ToString();
+        // }
+        // else if (visitor.IsApproved == false)
+        // {
+        //     visitorVM.ApprovalStatus = ApprovalStatus.Rejected.ToString();
+        // }
+        // else
+        // {
+        //     visitorVM.ApprovalStatus = ApprovalStatus.Expired.ToString();
+        // }
+
+        User? resident = await _userService.CurrentHouseResident(visitorVM.Address);
+        if (resident != null)
+        {
+            visitorVM.ResidentRole = resident.Role.Name;
+        }
+
+        if (visitor.VisitorFeedbacks != null)
+        {
+            visitorVM.Feedback = visitor.VisitorFeedbacks.FirstOrDefault()?.Feedback;
+            visitorVM.Rating = visitor.VisitorFeedbacks.FirstOrDefault()?.Rating;
+        }
 
         return visitorVM;
     }
@@ -63,7 +117,13 @@ public class VisitorService : IVisitorService
         return _visitPurposeRepository.GetAll().ToList();
     }
 
-    public async Task<VisitorPagination> List(StatusFilterVM filter)
+    public List<VisitorStatus> VisitorStatuses()
+    {
+        return _visitorStatusRepository.GetAll().ToList();
+    }
+
+
+    public async Task<VisitorPagination> List(VisitorFilterVM filter)
     {
         //For sorting the column according to order
         Func<IQueryable<Visitor>, IOrderedQueryable<Visitor>>? orderBy = q => q.OrderBy(v => v.Id);
@@ -106,7 +166,8 @@ public class VisitorService : IVisitorService
 
         if (filter.Role == "Owner" || filter.Role == "Tenant")
         {
-            filter.Id = await _houseMappingService.GetId(await _httpService.LoggedInUserId());
+            int userId = await _httpService.LoggedInUserId();
+            filter.Id = await _houseMappingService.GetId(userId);
         }
         else
         {
@@ -182,33 +243,6 @@ public class VisitorService : IVisitorService
             }
         }
 
-        //Filter on the basis of Approval status
-        Expression<Func<Visitor, bool>> approvePredicate = v => true;
-        if (!string.IsNullOrEmpty(filter.Status) && filter.Status.ToLower() != "all")
-        {
-            if (Enum.TryParse<ApprovalStatus>(filter.Status, true, out var status))
-            {
-                switch (status)
-                {
-                    case ApprovalStatus.Pending:
-                        approvePredicate = v => v.IsApproved == null && (DateTime.Now - v.CreatedAt).TotalMinutes <= 30;
-                        break;
-
-                    case ApprovalStatus.Approved:
-                        approvePredicate = v => v.IsApproved == true;
-                        break;
-
-                    case ApprovalStatus.Rejected:
-                        approvePredicate = v => v.IsApproved == false;
-                        break;
-
-                    case ApprovalStatus.Expired:
-                        approvePredicate = v => v.IsApproved == null && (DateTime.Now - v.CreatedAt).TotalMinutes >= 30;
-                        break;
-                }
-            }
-        }
-
         //Filter on the basis of Check Out Status
         Expression<Func<Visitor, bool>> checkOutPredicate = v => true;
         if (!string.IsNullOrEmpty(filter.CheckOutStatus) && filter.CheckOutStatus.ToLower() != "all")
@@ -229,6 +263,7 @@ public class VisitorService : IVisitorService
         //Filter on the basis of Visit Purpose
         Expression<Func<Visitor, bool>> visitPurposePredicate = v => filter.VisitPurpose == 0 || v.VisitPurposeId == filter.VisitPurpose;
 
+        Expression<Func<Visitor, bool>> visitorStatusPredicate = v => filter.VisitorStatus == -1 || v.StatusId == filter.VisitorStatus;
 
         //Fetching records on the basis of applied filters
         DbResult<Visitor> dbResult = await _visitorRepository.GetRecords(
@@ -236,7 +271,7 @@ public class VisitorService : IVisitorService
             {
                 predicate,
                 datePredicate,
-                approvePredicate,
+                visitorStatusPredicate,
                 checkOutPredicate,
                 visitPurposePredicate
             },
@@ -244,51 +279,41 @@ public class VisitorService : IVisitorService
             includes: new List<Expression<Func<Visitor, object>>>
             {
                 v => v.HouseMapping,
-                v => v.VisitPurpose
+                v => v.VisitPurpose,
+                v => v.Status
             },
             pageSize: filter.PageSize,
             pageNumber: filter.PageNumber
         );
 
-        List<VisitorInfoVM> visitorList = new();
+        List<VisitorVM> visitorList = new();
 
         //Setting all values in View Model
         foreach (Visitor r in dbResult.Records)
         {
             AddressVM address = await _houseMappingService.GetAddress(r.HouseMappingId);        //Resident Address where visitors wants to go
 
-            string approvalStatus;
-            if (r.IsApproved == null && (DateTime.Now - r.CreatedAt).TotalMinutes <= 30)
+            string residentRole = "";
+            User? resident = await _userService.CurrentHouseResident(address);
+            if (resident != null)
             {
-                approvalStatus = ApprovalStatus.Pending.ToString();
-            }
-            else if (r.IsApproved == true)
-            {
-                approvalStatus = ApprovalStatus.Approved.ToString();
-            }
-            else if (r.IsApproved == false)
-            {
-                approvalStatus = ApprovalStatus.Rejected.ToString();
-            }
-            else
-            {
-                approvalStatus = ApprovalStatus.Expired.ToString();
+                residentRole = resident.Role.Name;
             }
 
-            visitorList.Add(new VisitorInfoVM
+            visitorList.Add(new VisitorVM
             {
                 Id = r.Id,
                 Name = r.Name,
                 Phone = r.Phone,
                 VisitPurpose = r.VisitPurpose.Name == "Other" ? r.VisitPurposeReason : r.VisitPurpose.Name,
                 NoOfVisitors = r.NoOfVisitors,
-                WaitingSince = r.CreatedAt,
+                CreatedAt = r.CreatedAt,
                 Address = address,
-                Vehicle = r.VehicleNo,
-                IsApprove = r.IsApproved,
-                ApprovalStatus = approvalStatus,
+                VehicleNumber = r.VehicleNo,
+                ApprovalStatus = r.Status.Name,
                 CheckIn = r.CheckInTime,
-                CheckOut = r.CheckOutTime
+                CheckOut = r.CheckOutTime,
+                ResidentRole = residentRole
             });
         }
 
@@ -302,41 +327,66 @@ public class VisitorService : IVisitorService
         return Visitors;
     }
 
-    public async Task<ResponseVM> VisitorStatus(int id, bool IsApproved)
+    public async Task VisitorStatus(int id, bool IsApproved)
     {
         Visitor visitor = await _visitorRepository.GetByIdAsync(id)
                         ?? throw new NotFoundException(NotificationMessages.NotFound.Replace("{0}", "Visitor"));
 
+        int approvedById = await _httpService.LoggedInUserId();
+        string approvedByName = await _httpService.LoggedInUserName();
+
         if (IsApproved)
         {
+            visitor.StatusId = 2;
             visitor.CheckInTime = DateTime.Now;
         }
-        visitor.IsApproved = IsApproved;
+        else
+        {
+            visitor.StatusId = 3;
+        }
+
+        // visitor.IsApproved = IsApproved;
         visitor.UpdatedAt = DateTime.Now;
-        visitor.UpdatedBy = await _httpService.LoggedInUserId();
+        visitor.UpdatedBy = approvedById;
 
         await _visitorRepository.UpdateAsync(visitor);
 
-        ResponseVM response = new()
+        Notification notify = new()         //notify security about approved status
         {
-            Success = true
+            SenderId = await _httpService.LoggedInUserId(),
+            ReceiverId = visitor.CreatedBy,
+            TargetId = visitor.Id,
         };
 
         if (IsApproved)
         {
-            response.Message = NotificationMessages.Approved.Replace("{0}", "Visitor");
+            notify.Message = NotificationMessages.VisitorApproved.Replace("{0}", approvedByName).Replace("{1}", visitor.Name);
         }
         else
         {
-            response.Message = NotificationMessages.Rejected.Replace("{0}", "Visitor");
+            notify.Message = NotificationMessages.VisitorRejected.Replace("{0}", approvedByName).Replace("{1}", visitor.Name);
         }
 
-        return response;
+        await _notificationService.VisitorNotification(notify);
     }
+
+    public async Task VisitorStatusExpired(int id)
+    {
+        Visitor visitor = await _visitorRepository.GetByIdAsync(id)
+                        ?? throw new NotFoundException(NotificationMessages.NotFound.Replace("{0}", "Visitor"));
+
+        visitor.StatusId = 4;
+        visitor.UpdatedAt = DateTime.Now;
+        await _visitorRepository.UpdateAsync(visitor);
+    }
+
+
 
     public async Task<ResponseVM> Save(VisitorVM visitorVM)
     {
         ResponseVM response = new();
+
+        int securityId = await _httpService.LoggedInUserId();
 
         Visitor visitor = await _visitorRepository.GetByIdAsync(visitorVM.Id) ?? new();
 
@@ -347,7 +397,7 @@ public class VisitorService : IVisitorService
         visitor.VisitPurposeId = visitorVM.VisitPurposeId;
         visitor.VehicleNo = visitorVM.VehicleNumber;
         visitor.UpdatedAt = DateTime.Now;
-        visitor.UpdatedBy = await _httpService.LoggedInUserId();
+        visitor.UpdatedBy = securityId;
 
         //If visit purpose is other then store it in reason
         if (visitorVM.VisitPurposeId == _visitPurposeRepository.GetByStringAsync(vp => vp.Name == "Other").Result!.Id)
@@ -361,10 +411,37 @@ public class VisitorService : IVisitorService
 
         if (visitorVM.Id == 0)
         {
+            //Add Visitor
+            visitor.StatusId = 1;
             visitor.CreatedAt = DateTime.Now;
-            visitor.CreatedBy = await _httpService.LoggedInUserId();
+            visitor.CreatedBy = securityId;
 
-            await _visitorRepository.AddAsync(visitor);
+            visitor.Id = await _visitorRepository.AddAsyncReturnId(visitor);
+
+            Notification notify = new()
+            {
+                SenderId = securityId,
+                TargetId = visitor.Id,
+                Message = NotificationMessages.NewVisitorArrived.Replace("{0}", visitor.Name),
+            };
+
+            //Notify House Owner about new visitor
+            int ownerRoleId = await _roleService.Get(RoleType.Owner.ToString());
+            response = await _userService.GetHouseResident(visitorVM.Address, ownerRoleId);     // to get the resident id
+            if (response.Id != 0)
+            {
+                notify.ReceiverId = response.Id;
+                await _notificationService.VisitorNotification(notify);
+            }
+
+            //Notify Tenant about new visitor
+            int tenantRoleId = await _roleService.Get(RoleType.Tenant.ToString());
+            response = await _userService.GetHouseResident(visitorVM.Address, tenantRoleId);
+            if (response.Id != 0)
+            {
+                notify.ReceiverId = response.Id;
+                await _notificationService.VisitorNotification(notify);
+            }
 
             response.Success = true;
             response.Message = NotificationMessages.Added.Replace("{0}", "Visitor");
@@ -380,7 +457,7 @@ public class VisitorService : IVisitorService
         return response;
     }
 
-    public async Task CheckOut(int id, int rating, string feedback)
+    public async Task<ResponseVM> CheckOut(int id, int rating, string feedback)
     {
         Visitor visitor = await _visitorRepository.GetByIdAsync(id)
                         ?? throw new NotFoundException(NotificationMessages.NotFound.Replace("{0}", "Visitor"));
@@ -390,11 +467,46 @@ public class VisitorService : IVisitorService
             await _feedbackService.Add(id, rating, feedback);
         }
 
+        int securityId = await _httpService.LoggedInUserId();
+
         visitor.CheckOutTime = DateTime.Now;
         visitor.UpdatedAt = DateTime.Now;
-        visitor.UpdatedBy = await _httpService.LoggedInUserId();
+        visitor.UpdatedBy = securityId;
 
         await _visitorRepository.UpdateAsync(visitor);
+
+        Notification notify = new()
+        {
+            SenderId = securityId,
+            TargetId = visitor.Id,
+            Message = NotificationMessages.VisitorCheckedOut.Replace("{0}", visitor.Name)
+        };
+
+        //Resident Address where visitor gone
+        AddressVM residentAddress = await _houseMappingService.GetAddress(visitor.HouseMappingId);
+
+        //Notify House Owner about visitor checkout
+        int ownerRoleId = await _roleService.Get(RoleType.Owner.ToString());
+        ResponseVM response = await _userService.GetHouseResident(residentAddress, ownerRoleId);     // to get the resident id
+        if (response.Id != 0)
+        {
+            notify.ReceiverId = response.Id;
+            await _notificationService.VisitorNotification(notify);
+        }
+
+        //Notify Tenant about visitor checkout
+        int tenantRoleId = await _roleService.Get(RoleType.Tenant.ToString());
+        response = await _userService.GetHouseResident(residentAddress, tenantRoleId);
+        if (response.Id != 0)
+        {
+            notify.ReceiverId = response.Id;
+            await _notificationService.VisitorNotification(notify);
+        }
+
+        response.Success = true;
+        response.Message = notify.Message;
+        return response;
+
     }
 
 }

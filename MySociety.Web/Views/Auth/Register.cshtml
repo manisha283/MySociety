@@ -4,13 +4,15 @@
 @{
     ViewData["Title"] = "Register";
     Layout = "_LoginLayout";
-    var ownerRoleId = Model.Roles.FirstOrDefault(r => r.Name == "Owner")?.Id ?? 0;
-    var tenantRoleId = Model.Roles.FirstOrDefault(r => r.Name == "Tenant")?.Id ?? 0;
+    int ownerRoleId = Model.Roles.FirstOrDefault(r => r.Name == "Owner")?.Id ?? 0;
+    int tenantRoleId = Model.Roles.FirstOrDefault(r => r.Name == "Tenant")?.Id ?? 0;
 }
 
 <form asp-controller="Auth" asp-action="Register" class="row row-cols-1">
 
-    @* <input type="hidden" id="RoleId" name="RoleId" value="-1" /> *@
+    <input asp-for="RoleId" type="hidden" id="RoleId" value="-1" />
+    <input asp-for="Roles" type="hidden" />
+    <input asp-for="Address.Blocks" type="hidden" />
 
     <!-- Name -->
     <div class="mb-4 col">

@@ -20,13 +20,14 @@ public class VisitorController : Controller
     {
         VisitorIndexVM index = new()
         {
-            VisitPurposes = _visitorService.VisitPurposes()
+            VisitPurposes = _visitorService.VisitPurposes(),
+            VisitorStatuses = _visitorService.VisitorStatuses()
         };
         ViewData["sidebar-active"] = "Visitors";
         return View(index);
     }
 
-    public async Task<IActionResult> List(StatusFilterVM filter)
+    public async Task<IActionResult> List(VisitorFilterVM filter)
     {
         VisitorPagination list = await _visitorService.List(filter);
         return PartialView("_ListPartial", list);
@@ -34,17 +35,28 @@ public class VisitorController : Controller
 
     public async Task<JsonResult> VisitorStatus(int id, bool IsApproved)
     {
-        ResponseVM response = await _visitorService.VisitorStatus(id, IsApproved);
+        await _visitorService.VisitorStatus(id, IsApproved);
+        ResponseVM response = new()
+        {
+            Success = true,
+            Message = IsApproved ? NotificationMessages.Approved.Replace("{0}", "Visitor") : NotificationMessages.Rejected.Replace("{0}", "Visitor")
+        };
         return Json(response);
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get(int id = 0)
+    public async Task<IActionResult> Get(int id)
     {
         ViewData["sidebar-active"] = "Visitors";
-
         VisitorVM visitorVM = await _visitorService.Get(id);
+        return View(visitorVM);
+    }
 
+    [HttpGet]
+    public async Task<IActionResult> Save(int id = 0)
+    {
+        ViewData["sidebar-active"] = "Visitors";
+        VisitorVM visitorVM = await _visitorService.Get(id);
         return View(visitorVM);
     }
 
@@ -59,7 +71,7 @@ public class VisitorController : Controller
         if (!ModelState.IsValid)
         {
             visitorVM = await _visitorService.Get(visitorVM.Id);
-            return View("GetVisitor", visitorVM);
+            return View(visitorVM);
         }
         ResponseVM response = await _visitorService.Save(visitorVM);
 
@@ -73,18 +85,18 @@ public class VisitorController : Controller
         else
         {
             visitorVM = await _visitorService.Get(visitorVM.Id);
-            return View("GetVisitor", visitorVM);
+            return View(visitorVM);
         }
     }
 
     public async Task<JsonResult> CheckOut(int id, int rating = 0, string feedback = "")
     {
-        await _visitorService.CheckOut(id, rating, feedback);
-        ResponseVM response = new()
-        {
-            Success = true,
-            Message = NotificationMessages.VisitorCheckedOut
-        };
+        ResponseVM response = await _visitorService.CheckOut(id, rating, feedback);
         return Json(response);
+    }
+    public async Task<IActionResult> VisitorStatusExpired(int id)
+    {
+        await _visitorService.VisitorStatusExpired(id);
+        return Ok();
     }
 }

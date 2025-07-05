@@ -1,5 +1,12 @@
 @using MySociety.Entity.ViewModels
+@using System.Security.Claims
+@using MySociety.Service.Common
 @model VisitorPagination
+
+@{
+    string? userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+    string? hideClass = userRole == "Security" ? "d-none" : "";
+}
 
 <!-- Table -->
 <div class="table-responsive">
@@ -64,7 +71,7 @@
                         <img src="~/images/icons/arrow-down.svg" alt="">
                     </span>
                 </th>
-                <th scope="col" class="col sortable-column" data-column="vehicle" data-current-order="desc">
+                <th scope="col" class="col sortable-column" data-column="status" data-current-order="desc">
                     <span>Status</span>
                     <span class="d-none" data-order="asc">
                         <img src="~/images/icons/arrow-up.svg" alt="">
@@ -93,7 +100,7 @@
                 </th>
                 @if (User.IsInRole("Owner") || User.IsInRole("Tenant") || User.IsInRole("Security"))
                 {
-                    <th scope="col" class="col sortable-column approveAction" data-column="checkIn"
+                    <th scope="col" class="col sortable-column" data-column="checkIn"
                         data-current-order="desc">
                         <span>Waiting Since</span>
                         <span class="d-none" data-order="asc">
@@ -103,14 +110,14 @@
                             <img src="~/images/icons/arrow-down.svg" alt="">
                         </span>
                     </th>
-                    <th scope="col" class="col-1 approveAction">Action</th>
                 }
+                <th scope="col" class="col-1">Action</th>
             </tr>
         </thead>
         <tbody class="table-group-divider">
             @foreach (var visitor in Model.Visitors)
             {
-                <tr>
+                <tr data-id="@visitor.Id">
                     @if (!User.IsInRole("Owner") && !User.IsInRole("Tenant"))
                     {
                         <td>@visitor.Address.UnitName</td>
@@ -123,7 +130,7 @@
                     <td>@visitor.VisitPurpose</td>
                     <td>@visitor.NoOfVisitors</td>
                     <td>
-                        @(visitor.Vehicle ?? "N/A")
+                        @(visitor.VehicleNumber ?? "N/A")
                     </td>
                     <td>@visitor.ApprovalStatus</td>
                     <td>
@@ -132,54 +139,62 @@
                     <td>
                         @(visitor.CheckOut == null ? "-" : visitor.CheckOut)
                     </td>
+                    
                     @if (User.IsInRole("Owner") || User.IsInRole("Tenant") || User.IsInRole("Security"))
                     {
-                        @if (visitor.ApprovalStatus == "Pending")
+                        @if (visitor.ApprovalStatus == "Pending")                                       //Waiting Time
                         {
-                            <td class="waiting-time approveAction"
-                                data-time="@visitor.WaitingSince.ToString("yyyy-MM-ddTHH:mm:ss")"></td>
-                        }
-                        else
-                        {
-                            <td>-</td>
-                        }
-
-                        @if (visitor.ApprovalStatus == "Pending")
-                        {
-                            <td class="d-flex gap-2 approveAction">
-                                @if (User.IsInRole("Security"))
-                                {
-                                    <a asp-action="GetVisitor" asp-controller="Visitor" asp-route-id="@visitor.Id"
-                                        class="px-3 btn btn-edit">
-                                        Edit
-                                    </a>
-                                }
-                                <button type="button" class="px-3 btn btn-approve" onclick="approveModal(this)" data-name="@visitor.Name"
-                                    data-id=@visitor.Id>
-                                    Approve
-                                </button>
-
-                                <button type="button" class="px-3 btn btn-reject" onclick="rejectModal(this)" data-name="@visitor.Name"
-                                    data-id=@visitor.Id>
-                                    Reject
-                                </button>
-
-                            </td>
-                        }
-                        else if (visitor.ApprovalStatus == "Approved" && visitor.CheckIn != null && visitor.CheckOut == null &&
-                        User.IsInRole("Security"))
-                        {
-                            <td>
-                                <button type="button" class="px-3 btn btn-checkOut" onclick="checkOutModal(this)" data-id=@visitor.Id data-name="@visitor.Name">
-                                    Check Out
-                                </button>
-                            </td>
+                            <td class="waiting-time"
+                                data-time="@visitor.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss")"></td>
                         }
                         else
                         {
                             <td>-</td>
                         }
                     }
+
+                    <td class="d-flex gap-2">
+                        <a asp-action="Get" asp-controller="Visitor" asp-route-id="@visitor.Id" type="button"
+                            class="px-3 btn btn-view">
+                            View
+                        </a>
+
+                        <span>@visitor.ApprovalStatus</span>
+
+                        @if (User.IsInRole("Security") && visitor.ApprovalStatus == "Pending")
+                        {
+                            <a asp-action="Save" asp-controller="Visitor" asp-route-id="@visitor.Id" class="px-3 btn btn-edit">
+                                Edit
+                            </a>
+                        }
+
+                        @if (User.IsInRole("Owner") || User.IsInRole("Tenant") || User.IsInRole("Security"))
+                        {
+                            @if (visitor.ApprovalStatus == "Pending")                                       //Action
+                            {
+                                @if(userRole == visitor.ResidentRole || userRole == RoleType.Security.ToString())
+                                {
+                                    <button type="button" class="px-3 btn btn-approve" onclick="approveModal(this)"
+                                        data-name="@visitor.Name" data-id=@visitor.Id>
+                                        Approve
+                                    </button>
+
+                                    <button type="button" class="px-3 btn btn-reject" onclick="rejectModal(this)"
+                                        data-name="@visitor.Name" data-id=@visitor.Id>
+                                        Reject
+                                    </button>
+                                }
+                            }
+                            else if (visitor.ApprovalStatus == "Approved" && visitor.CheckIn != null && visitor.CheckOut == null &&
+                            User.IsInRole("Security"))
+                            {
+                                <button type="button" class="px-3 btn btn-checkOut" onclick="checkOutModal(this)"
+                                    data-id=@visitor.Id data-name="@visitor.Name">
+                                    Check Out
+                                </button>
+                            }
+                        }
+                    </td>
                 </tr>
             }
         </tbody>

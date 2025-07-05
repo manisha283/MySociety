@@ -7,4 +7,5 @@ public interface IHouseMappingService
     Task<int> Get(AddressVM address);
     Task<AddressVM> GetAddress(int id);
     Task<int> GetId(int userId);
+    Task<AddressVM> List();
 }

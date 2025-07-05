@@ -18,7 +18,8 @@ public class BlockService : IBlockService
     public async Task<IEnumerable<Block>> List()
     {
         DbResult<Block> result = await _blockRepository.GetRecords(
-            b => b.DeletedBy == null
+            predicate: b => b.DeletedBy == null,
+            orderBy: q => q.OrderBy(b => b.BlockNumber)
         );
 
         return result.Records;

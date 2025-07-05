@@ -6,9 +6,11 @@ namespace MySociety.Service.Interfaces;
 public interface IVisitorService
 {
     Task<VisitorVM> Get(int id);
-    Task<VisitorPagination> List(StatusFilterVM filter);
+    Task<VisitorPagination> List(VisitorFilterVM filter);
     Task<ResponseVM> Save(VisitorVM visitorVM);
-    Task<ResponseVM> VisitorStatus(int id, bool IsApproved);
+    Task VisitorStatus(int id, bool IsApproved);
     List<VisitPurpose> VisitPurposes();
-    Task CheckOut(int id, int rating, string feedback);
+    List<VisitorStatus> VisitorStatuses();
+    Task VisitorStatusExpired(int id);
+    Task<ResponseVM> CheckOut(int id, int rating, string feedback);
 }

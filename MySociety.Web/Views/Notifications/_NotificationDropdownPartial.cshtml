@@ -1,0 +1,49 @@
+@using MySociety.Entity.ViewModels
+@model List<NotificationVM>
+
+@if (Model != null && Model.Any())
+{
+    <div style="max-height: 300px; overflow-y: auto; scrollbar-width: thin">
+        @foreach (NotificationVM notification in Model)
+        {
+            <li class="px-2 py-2 border-bottom li-notification" data="@notification.Id">
+                <div>
+                    <strong class="d-block fs-6">@notification.Message</strong>
+
+                    <div class="d-flex justify-content-between align-items-center mt-1">
+
+                        @if (notification.ActionUrl != null)
+                        {
+                            <a href="@notification.ActionUrl" class="btn btn-sm text-success py-0 px-2"
+                                onclick="event.stopPropagation(), markAsRead(@notification.Id)">
+                                <i class="fa-solid fa-eye"></i> View
+                            </a>
+                        }
+                        else
+                        {
+                            <div></div>
+                        }
+
+                        <button class="btn btn-sm text-primary py-0 px-2" data-id="@notification.Id"
+                            onclick="event.stopPropagation(), markAsRead(@notification.Id)">
+                            <i class="fa-solid fa-check"></i> Mark as Read
+                        </button>
+                    </div>
+                </div>
+            </li>
+        }
+    </div>
+    @if (Model.Count > 1)
+    {
+        <li class="d-flex justify-content-end mt-2 p-2">
+            <button class="btn btn-sm btn-outline-primary py-0 px-2 mark-read-btn"
+                onclick="event.stopPropagation(), markAllAsRead()">
+                <i class="fa-solid fa-check"></i> Mark all as Read
+            </button>
+        </li>
+    }
+}
+else
+{
+    <li><span class="dropdown-item-text">No new notifications</span></li>
+}

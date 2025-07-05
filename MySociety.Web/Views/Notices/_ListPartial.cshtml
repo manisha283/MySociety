@@ -1,0 +1,110 @@
+@using MySociety.Entity.ViewModels
+@using MySociety.Service.Common
+@model NoticePagination
+
+<!-- Table -->
+<div class="table-responsive">
+    <table class="table approval-table">
+        <thead>
+            <tr>
+                <th scope="col" class="col-7 sortable-column" data-column="title" data-current-order="asc">
+                    <span>Title</span>
+                    <span class="d-none" data-order="asc">
+                        <img src="~/images/icons/arrow-up.svg" alt="">
+                    </span>
+                    <span class="d-none" data-order="desc">
+                        <img src="~/images/icons/arrow-down.svg" alt="">
+                    </span>
+                </th>
+                <th scope="col" class="col-2 sortable-column" data-column="createdat" data-current-order="desc">
+                    <span>Created At</span>
+                    <span class="d-none" data-order="asc">
+                        <img src="~/images/icons/arrow-up.svg" alt="">
+                    </span>
+                    <span class="d-none" data-order="desc">
+                        <img src="~/images/icons/arrow-down.svg" alt="">
+                    </span>
+                </th>
+                <th scope="col" class="col-2 sortable-column" data-column="updatedat" data-current-order="desc">
+                    <span>Updated At</span>
+                    <span class="d-none" data-order="asc">
+                        <img src="~/images/icons/arrow-up.svg" alt="">
+                    </span>
+                    <span class="d-none" data-order="desc">
+                        <img src="~/images/icons/arrow-down.svg" alt="">
+                    </span>
+                </th>
+                <th scope="col" class="col-1">Action</th>
+            </tr>
+        </thead>
+        <tbody class="table-group-divider">
+            @foreach (NoticeVM notice in Model.Notices)
+            {
+                <tr>
+                    <td scope="row">
+                        <img src="~/images/profile.png" alt="" width="35px" height="35px" class="rounded-circle">
+                        <span>@notice.Title</span>
+                    </td>
+                    <td>@notice.CreatedAt</td>
+                    <td>@notice.UpdatedAt</td>
+                    <td>
+                        <a asp-action="Get" asp-controller="Notices" asp-route-id="@notice.Id" type="button"
+                            class="px-3 btn btn-view">
+                            View
+                        </a>
+
+                        @if (User.IsInRole(RoleType.Admin.ToString()))
+                        {
+                            <a asp-action="Save" asp-controller="Notices" asp-route-id="@notice.Id" type="button"
+                                class="px-3 btn btn-edit">
+                                Edit
+                            </a>
+
+                            <button type="button" class="px-3 btn btn-delete" onclick="deleteModal(this)"
+                                data-name="@notice.Title" data-id=@notice.Id>
+                                Delete
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (Model.Notices.Count > 0)
+{
+    <!-- Pagination Starts -->
+    <div class="d-flex justify-content-end gap-1 flex-column flex-md-row pb-2">
+        <div class="d-flex flex-row justify-content-end align-items-center mb-1 me-1 gap-1">
+            <span>Items per page:</span>
+            <select class="form-select w-auto" onchange="paginationAjax(1)" id="itemsPerPage"
+                aria-label="Select items per page">
+                <option value="5" selected="@(Model.Page.PageSize == 5 ? true : false)">5</option>
+                <option value="10" selected="@(Model.Page.PageSize == 10 ? true : false)">10</option>
+                <option value="15" selected="@(Model.Page.PageSize == 15 ? true : false)">15</option>
+            </select>
+        </div>
+
+        <div class="d-flex flex-row justify-content-end align-items-center mb-1 gap-1">
+            <span>Showing @Model.Page.FromRec - @Model.Page.ToRec of @Model.Page.TotalRecord</span>
+
+            <!-- Previous Page Button -->
+            <button class="btn bg-white border btn-prev @(Model.Page.CurrentPage > 1 ? "" : "disabled")"
+                onclick="paginationAjax(@Model.Page.CurrentPage - 1)">
+                <img src="~/images/icons/chevron-left.svg" alt="">
+            </button>
+
+            <!-- Next Page Button -->
+            <button class="btn bg-white border btn-next @(Model.Page.CurrentPage < Model.Page.TotalPages ? "" : "disabled")"
+                onclick="paginationAjax(@Model.Page.CurrentPage + 1)">
+                <img src="~/images/icons/chevron-right.svg" alt="">
+            </button>
+        </div>
+    </div>
+    <!-- Pagination Ends -->
+}
+else
+{
+    <div class="text-center fs-5">No Record Found</div>
+}

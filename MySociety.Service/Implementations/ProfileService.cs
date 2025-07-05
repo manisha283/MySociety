@@ -28,12 +28,9 @@ public class ProfileService : IProfileService
             predicate: u => u.Id == userId,
             queries: new List<Func<IQueryable<User>, IQueryable<User>>>
             {
-                q => q.Include(u => u.HouseMappingOwners)
-                    .ThenInclude(m => m.Block),
-                q => q.Include(u => u.HouseMappingOwners)
-                    .ThenInclude(uhm => uhm.Floor),
-                q => q.Include(u => u.HouseMappingOwners)
-                    .ThenInclude(uhm => uhm.House)
+                q => q.Include(u => u.HouseUnit).ThenInclude(hu => hu.Block),
+                q => q.Include(u => u.HouseUnit).ThenInclude(hu => hu.Floor),
+                q => q.Include(u => u.HouseUnit).ThenInclude(hu => hu.House)
             }
         ) ?? throw new NotFoundException(NotificationMessages.NotFound.Replace("{0}", "User"));
 
@@ -44,9 +41,9 @@ public class ProfileService : IProfileService
             Phone = user.Phone,
             Email = user.Email,
             ProfileImageUrl = user.ProfileImg,
-            Block = user.HouseMappingOwners.Select(m => m.Block.Name).FirstOrDefault(),
-            Floor = user.HouseMappingOwners.Select(m => m.Floor.Name).FirstOrDefault(),
-            House = user.HouseMappingOwners.Select(m => m.House.Name).FirstOrDefault()
+            Block = user.HouseUnit.Block.Name,
+            Floor = user.HouseUnit.Floor.Name,
+            House = user.HouseUnit.House.Name
         };
 
         return profile;

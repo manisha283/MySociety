@@ -8,4 +8,7 @@ public class FilterVM
     public string Column { get; set; } = "";
     public string Sort { get; set; } = "";
     public string Search { get; set; } = "";
+    public string DateRange { get; set; } = "";
+    public DateOnly? FromDate { get; set; }
+    public DateOnly? ToDate { get; set; }
 }

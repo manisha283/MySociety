@@ -1,0 +1,89 @@
+@using MySociety.Entity.ViewModels
+@model MemberVM
+
+@{
+    ViewData["Title"] = "Members";
+    Layout = "_Layout";
+}
+
+<div class="container mt-5 d-flex justify-content-center">
+    <div class="card shadow-lg border-0 rounded-4 w-75">
+
+        <div class="card-header bg-custom-secondary text-white text-center rounded-top-4 d-flex justify-content-between">
+            <h3 class="mb-0">User Details</h3>
+            <a asp-action="Index" asp-controller="Members" class="btn">
+                <img class="text-white" src="~/images/icons/chevron-left-white.svg" alt="">
+                <span class="text-white">Members list</span>
+            </a>
+        </div>
+
+        <div class="card-body p-5 pe-0 bg-light rounded-bottom-4">
+            <div class="row row-cols-2 mb-3">
+
+                <div class="col mb-3">
+                    <h5><i class="bi bi-person-circle me-2 text-secondary"></i><strong>Name:</strong> @Model.Name</h5>
+                </div>
+
+                <div class="col mb-3">
+                    <h5><i class="bi bi-envelope-fill me-2 text-secondary"></i><strong>Email:</strong> @Model.Email</h5>
+                </div>
+
+                <div class="col mb-3">
+                    <h5><i class="bi bi-person-badge-fill me-2 text-secondary"></i><strong>Role:</strong> @Model.Role
+                    </h5>
+                </div>
+
+                <div class="col mb-3">
+                    <h5><i class="bi bi-clock-fill me-2 text-secondary"></i><strong>Registered At:</strong> @Model.RegisteredAt
+                    </h5>
+                </div>
+
+                @if (Model.Role == "Owner" || Model.Role == "Tenant")
+                {
+                    <div class="col mb-3">
+                        <h5><i class="bi bi-geo-alt-fill me-2 text-secondary"></i><strong>Unit:</strong>
+                            @Model.Address.UnitName</h5>
+                    </div>
+
+                    <div class="col mb-3">
+                        <h5><i class="bi bi-building me-2 text-secondary"></i><strong>Block:</strong>
+                            @Model.Address.BlockName</h5>
+                    </div>
+
+                    <div class="col mb-3">
+                        <h5><i class="bi bi-grid-3x3-gap-fill me-2 text-secondary"></i><strong>Floor:</strong>
+                            @Model.Address.FloorName</h5>
+                    </div>
+
+                    <div class="col mb-3">
+                        <h5><i class="bi bi-house-door-fill me-2 text-secondary"></i><strong>House:</strong>
+                            @Model.Address.HouseName</h5>
+                    </div>
+                }
+
+                @if (Model.IsApproved == null)
+                {
+                    <div class="mt-2 col-12 pe-5 ps-0 d-flex gap-3 justify-content-center">
+                        <button type="submit" class="btn btn-approve btn-lg px-4" onclick="approveModal(this)"
+                            data-name="@Model.Name" data-id=@Model.Id>
+                            <i class="bi bi-check-circle me-2"></i> Approve
+                        </button>
+
+                        <button type="submit" class="btn btn-reject btn-lg px-4" onclick="rejectModal(this)"
+                            data-name="@Model.Name" data-id=@Model.Id>
+                            <i class="bi bi-x-circle me-2"></i> Reject
+                        </button>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+
+@section Scripts {
+        <script>
+            let redirectToList = true;
+        </script>
+
+        <script src="~/js/members.js"></script>
+}

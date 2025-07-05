@@ -8,11 +8,13 @@
 
 <form id="loginForm" method="post">
 
+    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+
     @if (Model.LoginEnable)
     {
-        <input asp-for="RememberMe" hidden/>
-        <input asp-for="Email" hidden/>
-        <input asp-for="LoginEnable" hidden/>
+        <input asp-for="RememberMe" hidden />
+        <input asp-for="Email" hidden />
+        <input asp-for="LoginEnable" hidden />
         
         <div class="text-custom">
             OTP is sent successfully to @Model.Email

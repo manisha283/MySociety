@@ -11,33 +11,36 @@ namespace MySociety.Web.Controllers;
 public class AuthController : Controller
 {
     private readonly IAuthService _authService;
-    private readonly IBlockService _blockService;
     private readonly IRoleService _roleService;
+    private readonly IHouseMappingService _houseMappingService;
 
-    public AuthController(IAuthService authService, IBlockService blockService, IRoleService roleService)
+    public AuthController(IAuthService authService, IRoleService roleService, IHouseMappingService houseMappingService)
     {
         _authService = authService;
-        _blockService = blockService;
         _roleService = roleService;
+        _houseMappingService = houseMappingService;
+
     }
 
     #region  Login
     [HttpGet]
-    public IActionResult Login()
+    public IActionResult Login(string? returnUrl)
     {
         if (Request.Cookies["mySocietyEmail"] != null)
         {
             return RedirectToAction("Index", "Home");
         }
+        ViewBag.ReturnUrl = returnUrl;
         return View(new LoginVM());
     }
 
     [HttpPost]
-    public async Task<IActionResult> SendOtp(LoginVM loginVM)
+    public async Task<IActionResult> SendOtp(LoginVM loginVM, string? returnUrl)
     {
         ModelState.Remove("OtpCode");
         if (!ModelState.IsValid)
         {
+            ViewBag.ReturnUrl = returnUrl;
             return View("Login", loginVM);
         }
         ResponseVM response = await _authService.VerifyUser(loginVM);
@@ -50,16 +53,18 @@ public class AuthController : Controller
             TempData["NotificationMessage"] = response.Message;
             TempData["NotificationType"] = NotificationType.Error.ToString();
         }
+        ViewBag.ReturnUrl = returnUrl;
         return View("Login", loginVM);
     }
 
 
     [HttpPost]
-    public async Task<IActionResult> Login(LoginVM loginVM)
+    public async Task<IActionResult> Login(LoginVM loginVM, string? returnUrl)
     {
         ModelState.Remove("Password");
         if (!ModelState.IsValid)
         {
+            ViewBag.ReturnUrl = returnUrl;
             return View("Login", loginVM);
         }
 
@@ -93,12 +98,21 @@ public class AuthController : Controller
                 Response.Cookies.Append("mySocietyEmail", loginVM.Email, options);
             }
 
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
             return RedirectToAction("Index", "Home");
         }
+        else
+        {
+            TempData["NotificationMessage"] = response.Message;
+            TempData["NotificationType"] = NotificationType.Error.ToString();
+            ViewBag.ReturnUrl = returnUrl;
+            return View(loginVM);
+        }
 
-        TempData["NotificationMessage"] = response.Message;
-        TempData["NotificationType"] = NotificationType.Error.ToString();
-        return View(loginVM);
     }
     #endregion Login
 
@@ -106,14 +120,8 @@ public class AuthController : Controller
     [HttpGet]
     public async Task<IActionResult> Register()
     {
-        RegisterVM registerVM = new()
-        {
-            Roles = _roleService.List(),
-            Address = new()
-            {
-                Blocks = await _blockService.List()
-            }
-        };
+        RegisterVM registerVM = new();
+        await PopulateRegisterVM(registerVM);
         return View(registerVM);
     }
 
@@ -124,7 +132,8 @@ public class AuthController : Controller
         {
             TempData["NotificationMessage"] = NotificationMessages.ModelStateInvalid;
             TempData["NotificationType"] = NotificationType.Error.ToString();
-            return RedirectToAction("Register");
+            await PopulateRegisterVM(registerVM);
+            return View(registerVM);
         }
 
         ResponseVM response = await _authService.Register(registerVM);
@@ -138,8 +147,15 @@ public class AuthController : Controller
         else
         {
             TempData["NotificationType"] = NotificationType.Error.ToString();
-            return RedirectToAction("Register", "Auth");
+            await PopulateRegisterVM(registerVM);
+            return View(registerVM);
         }
+    }
+
+    private async Task PopulateRegisterVM(RegisterVM registerVM)
+    {
+        registerVM.Roles = _roleService.List();
+        registerVM.Address = await _houseMappingService.List();
     }
     #endregion Register
 

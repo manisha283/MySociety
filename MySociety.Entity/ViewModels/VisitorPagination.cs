@@ -3,6 +3,6 @@ namespace MySociety.Entity.ViewModels;
 
 public class VisitorPagination
 {
-    public List<VisitorInfoVM> Visitors { get; set; } = new List<VisitorInfoVM>();
+    public List<VisitorVM> Visitors { get; set; } = new List<VisitorVM>();
     public Pagination Page { get; set; } = new Pagination();
 }

@@ -46,13 +46,21 @@ public class HttpService : IHttpService
         return user.Id;
     }
 
+    public async Task<string> LoggedInUserName()
+    {
+        User user = await GetUser();
+        return user.Name;
+    }
+    
+
+
     public string LoggedInUserRole()
     {
         string token = GetToken();
 
         string role = JwtService.GetClaimValue(token, "role")
                     ?? throw new NotFoundException(NotificationMessages.NotFound.Replace("{0}", "Role of User"));
-                    
+
         return role;
     }
 }

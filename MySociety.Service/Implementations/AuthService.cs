@@ -19,8 +19,9 @@ public class AuthService : IAuthService
     private readonly IFloorService _floorService;
     private readonly IHouseService _houseService;
     private readonly IGenericRepository<UserOtp> _userOtpRepository;
+    private readonly IHouseMappingService _houseMappingService;
 
-    public AuthService(IEmailService emailService, IJwtService jwtService, IGenericRepository<ResetPasswordToken> resetPasswordRepository, IBlockService blockService, IUserService userService, IFloorService floorService, IHouseService houseService, IGenericRepository<UserOtp> userOtpRepository)
+    public AuthService(IEmailService emailService, IJwtService jwtService, IGenericRepository<ResetPasswordToken> resetPasswordRepository, IBlockService blockService, IUserService userService, IFloorService floorService, IHouseService houseService, IGenericRepository<UserOtp> userOtpRepository, IHouseMappingService houseMappingService)
     {
         _emailService = emailService;
         _jwtService = jwtService;
@@ -30,15 +31,15 @@ public class AuthService : IAuthService
         _floorService = floorService;
         _houseService = houseService;
         _userOtpRepository = userOtpRepository;
-
+        _houseMappingService = houseMappingService;
     }
 
     #region Login
 
     public async Task<ResponseVM> VerifyUser(LoginVM loginVM)
     {
-        ResponseVM response = await _userService.CheckUser(loginVM.Email);
-        if (response.Message != NotificationMessages.AlreadyExisted.Replace("{0}", "User") && !response.Success)
+        ResponseVM response = await _userService.ValidExistingUser(loginVM.Email);
+        if (!response.Success)
         {
             return response;
         }
@@ -236,18 +237,19 @@ public class AuthService : IAuthService
 
     public async Task<ResponseVM> Register(RegisterVM registerVM)
     {
-        ResponseVM response = await _userService.CheckUser(registerVM.Email);
+        ResponseVM response = await _userService.ValidNewUser(registerVM);
         if (!response.Success)
         {
             return response;
         }
 
-        int userId = await _userService.Add(registerVM);
-        // await _houseMappingService.UpdateUser(registerVM.BlockId, registerVM.FloorId, registerVM.FloorId);
-        // await _userHouseMappingService.Add(userId, houseMappingId);
+        registerVM.Id = await _userService.Add(registerVM);
 
         response.Success = true;
         response.Message = NotificationMessages.UserRegistered;
+
+        // registerVM.Address.UnitId = await _houseMappingService.Get(registerVM.Address);
+        // registerVM.Address = await _houseMappingService.GetAddress(registerVM.Address.UnitId);
 
         registerVM.Address.BlockName = await _blockService.GetName(registerVM.Address.BlockId);
         registerVM.Address.FloorName = await _floorService.GetName(registerVM.Address.FloorId);
@@ -267,6 +269,18 @@ public class AuthService : IAuthService
             response.Message = NotificationMessages.EmailSendingFailed;
         }
 
+        body = EmailTemplateHelper.RegisteredSuccessfully(registerVM);
+
+        if (await _emailService.SendEmail(registerVM.Email, "Registration Successfully", body))
+        {
+            response.Success = true;
+            response.Message = NotificationMessages.EmailSent;
+        }
+        else
+        {
+            response.Success = false;
+            response.Message = NotificationMessages.EmailSendingFailed;
+        }
 
         return response;
     }

@@ -1,0 +1,156 @@
+@using MySociety.Entity.Models
+@using MySociety.Entity.ViewModels
+@model MemberIndexVM
+
+@{
+    ViewData["Title"] = "Admin";
+    Layout = "_Layout";
+    int ownerRoleId = Model.Roles.FirstOrDefault(r => r.Name == "Owner")?.Id ?? 0;
+    int tenantRoleId = Model.Roles.FirstOrDefault(r => r.Name == "Tenant")?.Id ?? 0;
+}
+
+<div>
+    <h1 class="blue-text text-nowrap mt-3">Members List</h1>
+</div>
+
+<div class="row bg-custom px-3 mx-0 mt-3 d-flex flex-row">
+    <ul class="nav nav-pills d-flex gap-3" id="status-tab" role="tablist">
+
+        <li class="nav-item " role="presentation">
+            <button class="nav-link d-flex align-items-center p-2" type="button" data-bs-toggle="pill"
+                aria-selected="true" onclick="filterByStatus('all')">
+
+                <i class="bi bi-people me-2"></i>
+                <span class="fs-6 tab-text">All Users</span>
+            </button>
+        </li>
+
+        <li class="nav-item " role="presentation">
+            <button class="nav-link active d-flex align-items-center p-2" type="button" data-bs-toggle="pill"
+                aria-selected="false" onclick="filterByStatus('pending')">
+                <i class="bi bi-hourglass-split text-warning me-2"></i>
+                <span class="fs-6 tab-text">New Users</span>
+            </button>
+        </li>
+
+        <li class="nav-item " role="presentation">
+            <button class="nav-link d-flex align-items-center p-2" type="button" data-bs-toggle="pill"
+                aria-selected="false" onclick="filterByStatus('existing')">
+
+                <i class="bi bi-person-check text-success me-2"></i>
+                <span class="fs-6 tab-text">Existing Users</span>
+            </button>
+        </li>
+
+        <li class="nav-item " role="presentation">
+            <button class="nav-link d-flex align-items-center p-2" type="button" data-bs-toggle="pill"
+                aria-selected="false" onclick="filterByStatus('rejected')">
+
+                <i class="bi bi-person-x text-danger me-2"></i>
+                <span class="fs-6 tab-text">Rejected Users</span>
+            </button>
+        </li>
+
+    </ul>
+</div>
+
+<div class="mt-3 d-flex align-items-center row row-cols-5">
+
+    <div class="col mb-2">
+        <label for="selectRole">Member Role</label>
+        <select id="selectRole" class="form-select" aria-label="Select Role" onchange="paginationAjax(1)">
+            <option selected value="-1">All Roles</option>
+            <option value="0">Resident</option>
+            @foreach (Role role in Model.Roles)
+            {
+                if (role.Name != "Admin")
+                {
+                    <option value="@role.Id"> @role.Name</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="col mb-2">
+        <label for="selectBlock">Block</label>
+        <select id="selectBlock" class="form-select" aria-label="Select Block" onchange="paginationAjax(1)">
+            <option selected value="-1">All Blocks</option>
+            @foreach (Block block in Model.Address.Blocks)
+            {
+                <option value="@block.Id"> @block.Name</option>
+            }
+        </select>
+    </div>
+    
+    <div class="col mb-2">
+        <label asp-for="Address.FloorId">Floor</label>
+        <select asp-for="Address.FloorId" id="selectFloor" class="form-select" aria-label="Select Floor" onchange="paginationAjax(1)">
+            <option selected value="-1">All Floors</option>
+            @foreach (Floor floor in Model.Address.Floors)
+            {
+                <option value="@floor.Id"> @floor.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="col mb-2">
+        <label asp-for="Address.HouseId">House</label>
+        <select asp-for="Address.HouseId" id="selectHouse" class="form-select" aria-label="Select House" onchange="paginationAjax(1)">
+            <option selected value="-1">All Houses</option>
+            @foreach (House house in Model.Address.Houses)
+            {
+                <option value="@house.Id"> @house.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="col mb-2">
+        <label for="searchQuery">Search</label>
+        <div class="input-group w-auto">
+            <input type="search" class="form-control" placeholder="Search" name="search" id="searchQuery"
+                class="w-250px" oninput="paginationAjax(1)">
+            <button type="submit" class="input-group-text">
+                <img src="~/images/icons/search.svg" alt="">
+            </button>
+        </div>
+    </div>
+
+    <div class="col mb-2">
+        <label for="dateRange">Registered At</label>
+        <select class="form-select" id="dateRange" aria-label="Select Date Range" onchange="paginationAjax(1)">
+            <option selected value="All">All Time</option>
+            <option value="Today">Today</option>
+            <option value="Last7Days">Last 7 Days</option>
+            <option value="Last30Days">Last 30 Days</option>
+            <option value="CurrentMonth">Current Month</option>
+            <option value="CustomDate">Custom Date</option>
+        </select>
+    </div>
+
+    <div class="col mb-2 customDate d-none">
+        <label for="fromDate">From Date</label>
+        <input type="date" class="form-control" id="fromDate" placeholder="" onchange="paginationAjax(1)">
+    </div>
+
+    <div class=" col mb-2 customDate d-none">
+        <label for="toDate">To Date</label>
+        <input type="date" class="form-control" id="toDate" placeholder="" onchange="paginationAjax(1)">
+    </div>
+
+    <div class="col mt-2">
+        <button class="btn btn-custom-secondary px-3" onclick="resetFilters()">Reset</button>
+    </div>
+
+</div>
+
+<!-- Table -->
+<div class="bg-custom px-3 mt-3" id="tableContent">
+    <!-- Partial View -->
+</div>
+
+@section Scripts {
+    <script>
+        let redirectToList = false;
+    </script>
+
+    <script src="~/js/members.js"></script>
+}

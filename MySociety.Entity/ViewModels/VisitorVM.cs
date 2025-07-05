@@ -6,7 +6,7 @@ namespace MySociety.Entity.ViewModels;
 public class VisitorVM
 {
     public int Id { get; set; } = 0;
-    
+
     [Required(AllowEmptyStrings = false, ErrorMessage = "Name is required")]
     [StringLength(50, ErrorMessage = "Name cannot exceed 50 characters")]
     public string Name { get; set; } = null!;
@@ -25,7 +25,6 @@ public class VisitorVM
     [Required(ErrorMessage = "Reason is required")]
     public string? VisitReason { get; set; }
 
-
     [RegularExpression(@"^[A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{4}$", ErrorMessage = "Vehicle number format should be like GJ01AA0001")]
     public string? VehicleNumber { get; set; }
 
@@ -33,4 +32,14 @@ public class VisitorVM
     [Required(ErrorMessage = "Number of visitor is required")]
     [Range(1, int.MaxValue, ErrorMessage = "Number of visitor cannot be less than 0")]
     public int NoOfVisitors { get; set; }
+
+    public string? VisitPurpose { get; set; } = "";
+    public bool? IsApproved { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? CheckIn { get; set; }
+    public DateTime? CheckOut { get; set; }
+    public string? ApprovalStatus { get; set; }
+    public string? ResidentRole { get; set; }
+    public string? Feedback { get; set; }
+    public int? Rating { get; set; }
 }

@@ -5,13 +5,15 @@ namespace MySociety.Entity.ViewModels;
 
 public class RegisterVM
 {
+    public int Id { get; set; } = 0;
+    
     [Required(AllowEmptyStrings = false, ErrorMessage = "Email is required")]
     [DataType(DataType.EmailAddress)]
     [RegularExpression(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", ErrorMessage = "Invalid Email Format")]
     public string Email { get; set; } = null!;
 
     [Required(AllowEmptyStrings = false, ErrorMessage = "Name is required")]
-    [StringLength(50, ErrorMessage = "Name cannot exceed 100 characters")]
+    [StringLength(100, ErrorMessage = "Name cannot exceed 100 characters")]
     public string Name { get; set; } = null!;
 
     [Required(AllowEmptyStrings = false, ErrorMessage = "New Password is required")]

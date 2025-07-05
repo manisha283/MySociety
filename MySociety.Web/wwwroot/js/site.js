@@ -1,7 +1,6 @@
-﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
-
-// Write your JavaScript code.
+﻿$(document).ready(function () {
+  updateNotificationCount();
+});
 
 // Function to reinitialize validation for dynamically added elements
 function reinitializeValidation() {
@@ -146,4 +145,101 @@ function clearValidation() {
     .empty()
     .removeClass("validation-summary-errors")
     .addClass("validation-summary-valid");
+}
+
+//Applying Filter
+$(document).on("change", "#dateRange", function () {
+  if ($(this).val() == "CustomDate") {
+    $("#fromDate").val("");
+    $("#toDate").val("");
+    let today = new Date().toISOString().split("T")[0];
+    $("#fromDate, #toDate").attr("max", today);
+    $(".customDate").removeClass("d-none");
+  } else {
+    $(".customDate").addClass("d-none");
+    paginationAjax(1);
+  }
+});
+
+// Validate Date
+$(document).on("change", "#fromDate", function () {
+  let fromDate = $(this).val();
+  $("#toDate").attr("min", fromDate); // Restrict "To Date" to not be before "From Date"
+});
+
+$(document).on("change", "#toDate", function () {
+  let toDate = $(this).val();
+  $("#fromDate").attr("max", toDate); // Restrict "From Date" to not be after "To Date"
+});
+
+function updateNotificationDropdown() {
+  $.ajax({
+    url: "/Notifications/GetNotifications",
+    type: "GET",
+    success: function (data) {
+      $("#notificationList").html(data); // Replace dropdown content with notifications
+    },
+    error: function () {
+      $("#notificationList").html(
+        '<li><span class="dropdown-item-text text-danger">Failed to load notifications</span></li>'
+      );
+    },
+  });
+}
+
+function updateNotificationCount() {
+  $.ajax({
+    url: "/Notifications/GetUnreadCount",
+    type: "GET",
+    success: function (newCount) {
+      if (newCount < 100) {
+        $("#notificationCount").attr("data-number", newCount).text(newCount);
+      }
+      else
+      {
+        $("#notificationCount").attr("data-number", newCount).text("99+");
+      }
+
+      //  Hide the badge if count is 0
+      if (newCount === 0) {
+        $("#notificationCount").hide();
+      } else {
+        $("#notificationCount").show();
+      }
+    },
+    error: function () {
+      console.log("error in getting count of unread message");
+    },
+  });
+}
+
+function markAsRead(id) {
+  $.ajax({
+    url: `/Notifications/MarkAsRead?id=${id}`,
+    type: "POST",
+    success: function () {
+      updateNotificationCount();
+      updateNotificationDropdown();
+      console.log("Marked as read successfully");
+      paginationAjax(1);
+    },
+    error: function () {
+      console.error("Error marking notification as read");
+    },
+  });
+}
+
+function markAllAsRead() {
+  $.ajax({
+    url: "/Notifications/MarkAllAsRead",
+    type: "POST",
+    success: function () {
+      updateNotificationCount();
+      updateNotificationDropdown();
+      paginationAjax(1);
+    },
+    error: function () {
+      console.error("Error marking notification as read");
+    },
+  });
 }

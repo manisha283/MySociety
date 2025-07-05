@@ -1,0 +1,108 @@
+@using MySociety.Entity.Models
+@using MySociety.Entity.ViewModels
+@model NoticeVM
+
+@{
+    ViewData["Title"] = "Notice";
+}
+
+<div class="container">
+    <!-- User heading, search and add button -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="blue-text mt-3 mb-0">@(Model.Id == 0 ? "Add" : "Update") Notice</h1>
+        </div>
+        <div>
+            <a asp-action="Index" asp-controller="Notices" class="btn btn-custom">
+                <img class="text-white" src="~/images/icons/chevron-left-white.svg" alt="">
+                <span>Back</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="row bg-custom p-3 mx-0">
+
+        <form asp-action="Save" asp-controller="Notices" class="" method="post" id="formSaveNotice"
+            enctype="multipart/form-data">
+
+            <input asp-for="Id" hidden>
+
+            <div class="row row-cols-3">
+
+                <div class="form-group col">
+                    <label asp-for="Title">Title</label>
+                    <input asp-for="Title" type="text" class="form-control" aria-describedby="Phone">
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="col">
+                    <label asp-for="CategoryId">Category</label>
+                    <select class="form-select" asp-for="CategoryId" aria-label="Category">
+                        <option value="-1">Select Category</option>
+                        @foreach (NoticeCategory category in Model.Categories)
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="CategoryId" class="text-danger"></span>
+                </div>
+
+                <div class="col mb-2 dropdown d-flex flex-column">
+                    <span>Audience Groups</span>
+                    <div class="d-flex gap-4 bg-white p-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="radioDefault" id="radioDefault1" checked>
+                            <label class="form-check-label" for="radioDefault1">
+                                All
+                            </label>
+                        </div>
+                        <div class="form-check" data-bs-toggle="modal" data-bs-target="#audienceModal">
+                            <input class="form-check-input" type="radio" name="radioDefault" id="radioDefault2" >
+                            <label class="form-check-label" for="radioDefault2">
+                                Custom
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group col-12 mt-2">
+                    <label asp-for="Description">Description</label>
+                    <textarea asp-for="Description" type="text" class="form-control"
+                        aria-describedby="Description"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+            </div>
+
+            <div class="d-flex gap-3 mt-2 justify-content-end">
+                <button class="btn btn-custom" type="submit">
+                    @(Model.Id == 0 ? "Add" : "Update")
+                </button>
+                <button class="btn btn-custom-secondary" type="reset" onclick="clearValidation()">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- Button trigger modal -->
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+    Launch static backdrop modal
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="audienceModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <partial name="_NoticeAudience" model="Model.AudiencesVM" />
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="~/js/notices.js"></script>
+}

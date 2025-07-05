@@ -23,8 +23,6 @@ public partial class Visitor
 
     public string? VehicleNo { get; set; }
 
-    public bool? IsApproved { get; set; }
-
     public DateTime CreatedAt { get; set; }
 
     public int CreatedBy { get; set; }
@@ -39,7 +37,11 @@ public partial class Visitor
 
     public string? VisitPurposeReason { get; set; }
 
+    public int StatusId { get; set; }
+
     public virtual HouseMapping HouseMapping { get; set; } = null!;
+
+    public virtual VisitorStatus Status { get; set; } = null!;
 
     public virtual VisitPurpose VisitPurpose { get; set; } = null!;
 

@@ -1,0 +1,116 @@
+@using MySociety.Entity.Models
+@using MySociety.Entity.ViewModels
+@model NoticeIndexVM
+
+@{
+    ViewData["Title"] = "Notices";
+}
+
+<div class="d-flex justify-content-between align-items-center">
+    <h1 class="display-4">Notices</h1>
+    <div>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-action="Save" asp-controller="Notices" class="btn btn-custom">
+                + Add Notice
+            </a>
+        }
+    </div>
+</div>
+
+<div class="mt-3 d-flex align-items-center row row-cols-4">
+
+    <div class="col mb-2">
+        <label for="searchQuery">Search</label>
+        <div class="input-group w-auto">
+            <input type="search" class="form-control" placeholder="Search" name="search" id="searchQuery"
+                class="w-250px" oninput="paginationAjax(1)">
+            <button type="submit" class="input-group-text">
+                <img src="~/images/icons/search.svg" alt="">
+            </button>
+        </div>
+    </div>
+
+    <div class="col mb-2">
+        <label for="selectGroupType">Category</label>
+        <select class="form-select" id="selectGroupType" aria-label="Select Audience Group Type"
+            onchange="paginationAjax(1)">
+            <option value="-1">All</option>
+            @foreach (NoticeCategory category in Model.Categories)
+            {
+                <option value="@category.Id">@category.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="col mb-2">
+        <label for="selectCategoryId">Audience Group Type</label>
+        <select class="form-select" id="selectCategoryId" aria-label="Select Category" onchange="paginationAjax(1)">
+            @foreach (AudienceGroupType audience in Model.Audiences)
+            {
+                <option value="@audience.Id">@audience.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="col mb-2 dropdown d-flex flex-column">
+        <span>Audience Groups</span>
+        <a class="btn dropdown-toggle border d-flex align-items-center justify-content-between h-100 w-100 bg-white" type="button"
+            data-bs-toggle="dropdown" aria-expanded="false">
+            Select Audience Groups(s)
+        </a>
+        <ul class="dropdown-menu w-100">
+            @if (Model.Audiences != null)
+            {
+                @foreach (AudienceGroupType groupType in Model.Audiences)
+                {
+                    <li class="d-flex px-2 pb-1">
+                        <input type="checkbox" value="" class="me-2 audienceCheckbox" data-id="@groupType.Id"
+                            @(Model.SelectedGroup.Contains(groupType.Id) ? "checked" : "")>
+                        <span class="">@groupType.Name</span>
+                    </li>
+                }
+            }
+        </ul>
+    </div>
+
+    <div class="col mb-2">
+        <label for="dateRange">Created At</label>
+        <select class="form-select" id="dateRange" aria-label="Select Date Range" onchange="paginationAjax(1)">
+            <option selected value="All">All Time</option>
+            <option value="Today">Today</option>
+            <option value="Last7Days">Last 7 Days</option>
+            <option value="Last30Days">Last 30 Days</option>
+            <option value="CurrentMonth">Current Month</option>
+            <option value="CustomDate">Custom Date</option>
+        </select>
+    </div>
+
+    <div class="col mb-2 customDate d-none">
+        <label for="fromDate">From Date</label>
+        <input type="date" class="form-control" id="fromDate" placeholder="" onchange="paginationAjax(1)">
+    </div>
+
+    <div class=" col mb-2 customDate d-none">
+        <label for="toDate">To Date</label>
+        <input type="date" class="form-control" id="toDate" placeholder="" onchange="paginationAjax(1)">
+    </div>
+
+    <div class="col mt-2">
+        <button class="btn btn-custom-secondary px-3" onclick="resetFilters()">Reset</button>
+    </div>
+
+</div>
+
+<!-- Table -->
+<div class="bg-custom px-3 mt-3" id="tableContent">
+    <!-- Partial View -->
+</div>
+
+@section Scripts {
+    <script>
+        let redirectToList = false;
+    </script>
+
+    <script src="~/js/notices.js"></script>
+}

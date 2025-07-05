@@ -12,10 +12,16 @@ namespace MySociety.Service.Implementations;
 public class HouseMappingService : IHouseMappingService
 {
     private readonly IGenericRepository<HouseMapping> _houseMappingRepository;
+    private readonly IBlockService _blockService;
+    private readonly IFloorService _floorService;
+    private readonly IHouseService _houseService;
 
-    public HouseMappingService(IGenericRepository<HouseMapping> houseMappingRepository)
+    public HouseMappingService(IGenericRepository<HouseMapping> houseMappingRepository, IBlockService blockService, IFloorService floorService, IHouseService houseService)
     {
         _houseMappingRepository = houseMappingRepository;
+        _blockService = blockService;
+        _floorService = floorService;
+        _houseService = houseService;
     }
 
     public async Task<int> Get(AddressVM address)
@@ -48,22 +54,46 @@ public class HouseMappingService : IHouseMappingService
             }
         ) ?? new();
 
+        addressVM.BlockId = mapping.BlockId;
+        addressVM.FloorId = mapping.FloorId;
+        addressVM.HouseId = mapping.HouseId;
+
         addressVM.BlockName = mapping.Block.Name;
-        addressVM.BlockName = mapping.Floor.Name;
-        addressVM.BlockName = mapping.House.Name;
+        addressVM.FloorName = mapping.Floor.Name;
+        addressVM.HouseName = mapping.House.Name;
         addressVM.UnitName = mapping.Block.Name + "-" + mapping.Floor.FloorNumber + "0" + mapping.House.HouseNumber;
+
+        addressVM.Blocks = await _blockService.List();
+        addressVM.Floors = await _floorService.List();
+        addressVM.Houses = await _houseService.List();
 
         return addressVM;
     }
 
     public async Task<int> GetId(int userId)
     {
-        Expression<Func<HouseMapping, bool>> predicate = m => m.TenantId == userId || m.OwnerId == userId;
-        
-        HouseMapping mapping = await _houseMappingRepository.GetByStringAsync(predicate)
+        HouseMapping mapping = await _houseMappingRepository.GetByStringAsync(
+                                predicate: m => m.Users.Any(u => u.Id == userId),
+                                queries: new List<Func<IQueryable<HouseMapping>, IQueryable<HouseMapping>>>
+                                {
+                                    q => q.Include(m => m.Users)
+                                }
+                            )
                             ?? throw new NotFoundException(NotificationMessages.NotFound.Replace("{0}", "House Mapping"));
 
         return mapping.Id;
+    }
+
+    public async Task<AddressVM> List()
+    {
+        AddressVM addressVM = new()
+        {
+            Blocks = await _blockService.List(),
+            Floors = await _floorService.List(),
+            Houses = await _houseService.List()
+        };
+
+        return addressVM;
     }
 
 }

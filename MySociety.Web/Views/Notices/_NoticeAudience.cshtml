@@ -1,0 +1,76 @@
+@using MySociety.Entity.ViewModels
+@model NoticeAudienceVM
+
+<div class="modal-header">
+    <h1 class="modal-title fs-5" id="staticBackdropLabel">Select Target Audience</h1>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+    <!-- Roles Section -->
+    <div class="mb-3">
+        <h4>Roles</h4>
+        <div class="filter-group d-flex gap-3">
+            @foreach (var role in Model.Roles)
+            {
+                <label>
+                    <input type="checkbox" name="roles" class="audience-role" value="@role.Id"> @role.Name
+                </label>
+            }
+        </div>
+        <hr />
+    </div>
+
+
+    <!-- Blocks Section -->
+    <div class="mb-3">
+        <h4>Blocks</h4>
+        <div class="filter-group d-flex gap-3">
+            @foreach (var role in Model.Blocks)
+            {
+                <label>
+                    <input type="checkbox" name="blocks" class="audience-block" value="@role.Id"> @role.Name
+                </label>
+            }
+        </div>
+        <hr />
+    </div>
+
+    <!-- Floors Section (Optional) -->
+    <div class="mb-3">
+        <h4>Floors</h4>
+        <div class="filter-group d-flex gap-3">
+             @foreach (var floor in Model.Floors)
+            {
+                <label>
+                    <input type="checkbox" name="blocks" class="audience-block" value="@floor.Id"> @floor.Name
+                </label>
+            }
+        </div>
+        <hr />
+    </div>
+
+    @* <!-- Houses Section (Optional) -->
+    <div class="mb-3">
+        <h4>Houses</h4>
+        <div class="filter-group d-flex gap-3">
+            <label><input type="checkbox" name="houses" value="1001"> House 101</label>
+            <label><input type="checkbox" name="houses" value="1002"> House 102</label>
+        </div>
+        <hr />
+    </div> *@
+
+    <!-- Custom Groups -->
+    <div class="mb-3">
+        <h4>Custom Groups</h4>
+        <div class="filter-group d-flex gap-3">
+            <label><input type="checkbox" name="custom_groups" value="501"> VIP Residents</label>
+            <label><input type="checkbox" name="custom_groups" value="502"> Maintenance Team</label>
+        </div>
+    </div>
+
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-custom text-nowrap px-3" style="width: fit-content;">Apply
+        Filters</button>
+    <button type="button" class="btn btn-custom-secondary" data-bs-dismiss="modal">Close</button>
+</div>

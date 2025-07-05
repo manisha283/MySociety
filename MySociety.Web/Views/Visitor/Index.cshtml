@@ -1,11 +1,14 @@
 @using MySociety.Entity.Models
 @using MySociety.Entity.ViewModels
+@using System.Security.Claims
 @model VisitorIndexVM
 
 @{
     ViewData["Title"] = "Visitors";
     Layout = "_Layout";
+    string? userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 }
+
 
 <div class="d-flex justify-content-between align-items-center mt-3">
     <div>
@@ -17,70 +20,83 @@
         @if (User.IsInRole("Security"))
         {
             <div>
-                <a asp-action="Get" asp-controller="Visitor" class="btn btn-custom text-nowrap">+ New Visitor</a>
+                <a asp-action="Save" asp-controller="Visitor" class="btn btn-custom text-nowrap">+ New Visitor</a>
             </div>
         }
     </div>
 </div>
 
-<div class=" d-flex align-items-center gap-3 div-filter row">
+<div class=" d-flex align-items-center div-filter row row-cols-4">
 
-    @* <div class="row"> *@
-        <div class="input-group col">
+    <div class="col mb-2">
+        <label for="visitorStatus">Approval Status</label>
+        <select class="form-select" id="visitorStatus" aria-label="Select Approval status"
+            onchange="paginationAjax(1)">
+            <option selected value="-1">All</option>
+            @foreach (var status in Model.VisitorStatuses)
+            {
+                <option value=@status.Id>@status.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="col mb-2">
+        <label for="dateRange">Check Out Status</label>
+        <select class="form-select" id="checkOutStatus" aria-label="Select Check Out Status"
+            onchange="paginationAjax(1)">
+            <option selected value="All">All Visitors</option>
+            <option value="Current">Current Visitor</option>
+            <option value="Checked Out">Checked Out Visitor</option>
+        </select>
+    </div>
+
+    <div class="col mb-2">
+        <label for="visitPurpose">Visit Purpose</label>
+        <select class="form-select" id="visitPurpose" aria-label="Visit Purpose" onchange="paginationAjax(1)">
+            <option selected value="All">All Purpose</option>
+            @foreach (VisitPurpose purpose in Model.VisitPurposes)
+            {
+                <option value="@purpose.Id">@purpose.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="col mb-2">
+        <label for="searchQuery">Search</label>
+        <div class="input-group w-auto">
             <input type="search" class="form-control" placeholder="Search" name="search" id="searchQuery"
                 class="w-250px" oninput="paginationAjax(1)">
             <button type="submit" class="input-group-text">
                 <img src="~/images/icons/search.svg" alt="">
             </button>
         </div>
+    </div>
 
-        <div class="col">
-            <select class="form-select" id="approvalStatus" aria-label="Select Approval status"
-                onchange="paginationAjax(1)">
-                <option selected value="Pending">Pending</option>
-                <option value="All">All</option>
-                <option value="Approved">Approved</option>
-                <option value="Rejected">Rejected</option>
-                <option value="Expired">Expired</option>
-            </select>
-        </div>
+    <div class="col mb-2">
+        <label for="dateRange">Date Range</label>
+        <select class="form-select" id="dateRange" aria-label="Select Date Range" onchange="paginationAjax(1)">
+            <option selected value="All">All Time</option>
+            <option value="Today">Today</option>
+            <option value="Last7Days">Last 7 Days</option>
+            <option value="Last30Days">Last 30 Days</option>
+            <option value="CurrentMonth">Current Month</option>
+            <option value="CustomDate">Custom Date</option>
+        </select>
+    </div>
 
-        <div class="col">
-            <select class="form-select" id="dateRange" aria-label="Select Date Range" onchange="paginationAjax(1)">
-                <option selected value="All">All Time</option>
-                <option value="Today">Today</option>
-                <option value="Last7Days">Last 7 Days</option>
-                <option value="Last30Days">Last 30 Days</option>
-                <option value="CurrentMonth">Current Month</option>
-                <option value="CustomDate">Custom Date</option>
-            </select>
-        </div>
+    <div class="col mb-2 customDate d-none">
+        <label for="fromDate">From Date</label>
+        <input type="date" class="form-control" id="fromDate" placeholder="">
+    </div>
 
-        <div class="col">
-            <select class="form-select" id="checkOutStatus" aria-label="Select Check Out Status"
-                onchange="paginationAjax(1)">
-                <option selected value="All">All Visitors</option>
-                <option value="Current">Current Visitor</option>
-                <option value="Checked Out">Checked Out Visitor</option>
-            </select>
-        </div>
+    <div class=" col mb-2 customDate d-none">
+        <label for="toDate">To Date</label>
+        <input type="date" class="form-control" id="toDate" placeholder="">
+    </div>
 
-        <div class="col">
-            <select class="form-select" id="visitPurpose" aria-label="Visit Purpose" onchange="paginationAjax(1)">
-                <option selected value="All">All Purpose</option>
-                @foreach (VisitPurpose purpose in Model.VisitPurposes)
-                {
-                    <option value="@purpose.Id">@purpose.Name</option>
-                }
-            </select>
-        </div>
-
-        <div class="">
-            <button class="btn btn-custom-secondary px-3" onclick="resetFilters()">Reset</button>
-        </div>
-    @* </div> *@
-
-
+    <div class="col mt-2">
+        <button class="btn btn-custom-secondary px-3" onclick="resetFilters()">Reset</button>
+    </div>
 
 </div>
 
@@ -127,40 +143,11 @@
 </div>
 <!-- Customer Review Modal end-->
 
-<!-- Modal Custom date Range starts -->
-<div class="modal fade" id="customDateRange" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-    aria-labelledby="staticBackdropLabel" aria-hidden="true">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h1 class="modal-title fs-5" id="staticBackdropLabel">Select Date Range</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-                id="customDateClose"></button>
-        </div>
-
-        <div class="modal-body">
-            <div class="row mx-0 gap-2">
-                <div class="form-floating col p-0">
-                    <input type="date" class="form-control" id="fromDate" placeholder="">
-                    <label for="fromDate">From Date</label>
-                </div>
-
-                <div class="form-floating col p-0">
-                    <input type="date" class="form-control" id="toDate" placeholder="">
-                    <label for="toDate">To Date</label>
-                </div>
-            </div>
-        </div>
-        <div class="modal-footer d-flex justify-content-center">
-            <button type="button" class="btn btn-custom" id="customDateSubmit">Submit</button>
-            <button type="button" class="btn btn-custom-secondary" data-bs-dismiss="modal"
-                id="customDateCancel">Cancel</button>
-        </div>
-
-    </div>
-</div>
-</div>
-<!-- Modal Custom date Range ends -->
-
 @section Scripts {
+
+    <script>
+        var role = "@userRole";
+    </script>
+
     <script src="~/js/visitor.js"></script>
 }
