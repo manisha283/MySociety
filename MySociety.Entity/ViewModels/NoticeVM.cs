@@ -18,6 +18,7 @@ public class NoticeVM
     [Range(1, int.MaxValue, ErrorMessage = "Category is required")]
     public int CategoryId { get; set; } = -1;
     public List<NoticeCategory> Categories { get; set; } = new List<NoticeCategory>();
+    public bool IsAudienceAll { get; set; } = true;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public NoticeAudienceVM AudiencesVM { get; set; } = new();

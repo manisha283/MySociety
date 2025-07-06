@@ -149,18 +149,47 @@ public class UserService : IUserService
                         {
                             q => q.Include(u => u.Role)
                         });
-                        
+
             return owner;
         }
-
-
-
-
     }
 
     #endregion
 
     #region List
+
+    public async Task<List<MemberVM>> List()
+    {
+        DbResult<User> dbResult = await _userRepository.GetRecords(
+            predicate: u => u.DeletedBy == null && u.IsApproved == true,
+            orderBy: q => q.OrderBy(u => u.HouseUnitId),
+            queries: new List<Func<IQueryable<User>, IQueryable<User>>>
+            {
+                q => q.Include(u => u.Role),
+                q => q.Include(u => u.HouseUnit).ThenInclude(hu => hu.Block),
+                q => q.Include(u => u.HouseUnit).ThenInclude(hu => hu.Floor),
+                q => q.Include(u => u.HouseUnit).ThenInclude(hu => hu.House)
+            }
+        );
+
+        List<MemberVM> members = dbResult.Records.Select(u => new MemberVM()
+        {
+            Id = u.Id,
+            Email = u.Email,
+            Name = u.Name,
+            Address = new()
+            {
+                UnitName = u.HouseUnit?.HouseName,
+                BlockName = u.HouseUnit?.Block?.Name ?? "-",
+                FloorName = u.HouseUnit?.Floor?.Name ?? "-",
+                HouseName = u.HouseUnit?.House?.Name ?? "-",
+            },
+            Role = u.Role.Name,
+        }).ToList();
+
+        return members;
+    }
+
 
     public async Task<MembersPagination> List(MemberFilterVM filter)
     {
@@ -338,6 +367,7 @@ public class UserService : IUserService
                 Name = u.Name,
                 Address = new()
                 {
+                    UnitName = u.HouseUnit?.HouseName,
                     BlockName = u.HouseUnit?.Block?.Name ?? "-",
                     FloorName = u.HouseUnit?.Floor?.Name ?? "-",
                     HouseName = u.HouseUnit?.House?.Name ?? "-",

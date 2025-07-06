@@ -15,6 +15,7 @@ public interface IUserService
     Task UpdateProfile(ProfileVM profile);
     Task<ResponseVM> ChangePassword(ChangePasswordVM model);
     Task<MembersPagination> List(MemberFilterVM filter);
+    Task<List<MemberVM>> List();
     Task<ResponseVM> ChangeUserStatus(int userId, bool isApprove);
     Task<ResponseVM> ValidNewUser(RegisterVM registerVM);
     Task<ResponseVM> ValidExistingUser(string email);

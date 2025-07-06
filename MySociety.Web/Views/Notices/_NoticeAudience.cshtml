@@ -13,7 +13,7 @@
             @foreach (var role in Model.Roles)
             {
                 <label>
-                    <input type="checkbox" name="roles" class="audience-role" value="@role.Id"> @role.Name
+                    <input type="checkbox" name="roles" class="audience-checkbox" value="@role.Id" data-group-type="2"> @role.Name
                 </label>
             }
         </div>
@@ -28,7 +28,7 @@
             @foreach (var role in Model.Blocks)
             {
                 <label>
-                    <input type="checkbox" name="blocks" class="audience-block" value="@role.Id"> @role.Name
+                    <input type="checkbox" name="blocks" class="audience-checkbox" value="@role.Id" data-group-type="3"> @role.Name
                 </label>
             }
         </div>
@@ -42,35 +42,24 @@
              @foreach (var floor in Model.Floors)
             {
                 <label>
-                    <input type="checkbox" name="blocks" class="audience-block" value="@floor.Id"> @floor.Name
+                    <input type="checkbox" name="blocks" class="audience-checkbox" value="@floor.Id" data-group-type="4"> @floor.Name
                 </label>
             }
         </div>
         <hr />
     </div>
 
-    @* <!-- Houses Section (Optional) -->
-    <div class="mb-3">
-        <h4>Houses</h4>
-        <div class="filter-group d-flex gap-3">
-            <label><input type="checkbox" name="houses" value="1001"> House 101</label>
-            <label><input type="checkbox" name="houses" value="1002"> House 102</label>
-        </div>
-        <hr />
-    </div> *@
-
     <!-- Custom Groups -->
     <div class="mb-3">
         <h4>Custom Groups</h4>
         <div class="filter-group d-flex gap-3">
-            <label><input type="checkbox" name="custom_groups" value="501"> VIP Residents</label>
+            <label><input type="checkbox" name="custom_groups" class="audience-checkbox" value="501"> VIP Residents</label>
             <label><input type="checkbox" name="custom_groups" value="502"> Maintenance Team</label>
         </div>
     </div>
 
 </div>
 <div class="modal-footer">
-    <button type="button" class="btn btn-custom text-nowrap px-3" style="width: fit-content;">Apply
-        Filters</button>
+    <button type="button" class="btn btn-custom text-nowrap px-3" style="width: fit-content;">Clear Filters</button>
     <button type="button" class="btn btn-custom-secondary" data-bs-dismiss="modal">Close</button>
 </div>

@@ -12,14 +12,19 @@ public class NoticesController : Controller
     private readonly IRoleService _roleService;
     private readonly IBlockService _blockService;
     private readonly IFloorService _floorService;
+    private readonly IAudienceGroupService _audienceGroupService;
+    private readonly INoticeAudienceMappingService _noticeAudienceMappingService;
+    private readonly IUserService _userService;
 
-    public NoticesController(INoticeService noticeService, IRoleService roleService, IBlockService blockService, IFloorService floorService)
+    public NoticesController(INoticeService noticeService, IRoleService roleService, IBlockService blockService, IFloorService floorService, IAudienceGroupService audienceGroupService, INoticeAudienceMappingService noticeAudienceMappingService, IUserService userService)
     {
         _noticeService = noticeService;
         _roleService = roleService;
         _blockService = blockService;
         _floorService = floorService;
-
+        _audienceGroupService = audienceGroupService;
+        _noticeAudienceMappingService = noticeAudienceMappingService;
+        _userService = userService;
     }
 
     public async Task<IActionResult> Index()
@@ -57,6 +62,9 @@ public class NoticesController : Controller
         noticeVM.AudiencesVM.Roles = _roleService.List();
         noticeVM.AudiencesVM.Blocks = await _blockService.List();
         noticeVM.AudiencesVM.Floors = await _floorService.List();
+        noticeVM.AudiencesVM.GroupTypes = await _noticeAudienceMappingService.AudienceGroupTypeList();
+        noticeVM.AudiencesVM.CustomAudienceGroups = await _audienceGroupService.List();
+        noticeVM.AudiencesVM.Members = await _userService.List();
     }
 
 

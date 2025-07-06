@@ -10,12 +10,23 @@ public class NoticeAudienceMappingService : INoticeAudienceMappingService
 {
     private readonly IGenericRepository<NoticeAudienceMapping> _mappingRepository;
     private readonly IHttpService _httpService;
+    private readonly IGenericRepository<AudienceGroupType> _audienceGroupTypeRepository;
 
-    public NoticeAudienceMappingService(IGenericRepository<NoticeAudienceMapping> mappingRepository, IHttpService httpService)
+    public NoticeAudienceMappingService(IGenericRepository<NoticeAudienceMapping> mappingRepository, IHttpService httpService, IGenericRepository<AudienceGroupType> audienceGroupTypeRepository)
     {
         _mappingRepository = mappingRepository;
         _httpService = httpService;
+        _audienceGroupTypeRepository = audienceGroupTypeRepository;
+    }
 
+    public async Task<IEnumerable<AudienceGroupType>> AudienceGroupTypeList()
+    {
+        var dbResult = await _audienceGroupTypeRepository.GetRecords
+        (
+            orderBy: q => q.OrderBy(g => g.Id)
+        );
+
+        return dbResult.Records;
     }
 
     // public async Task Save(NoticeVM noticeVM)

@@ -34,6 +34,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IReportService, ReportService>();
         services.AddScoped<INoticeService, NoticeService>();
         services.AddScoped<INoticeAudienceMappingService, NoticeAudienceMappingService>();
+        services.AddScoped<IAudienceGroupService, AudienceGroupService>();
 
 
         services.AddSingleton<IUserIdProvider, UserIdProvider>();

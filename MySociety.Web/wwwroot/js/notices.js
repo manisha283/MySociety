@@ -16,7 +16,7 @@ function paginationAjax(pageNumber) {
     DateRange: $("#dateRange").val(),
     FromDate: $("#fromDate").val(),
     ToDate: $("#toDate").val(),
-    CategoryId: $("#selectCategoryId").val()
+    CategoryId: $("#selectCategoryId").val(),
   };
 
   $.ajax({
@@ -73,3 +73,47 @@ function deleteNotice(id) {
     },
   });
 }
+
+$(".audience-filter-form").on("submit", function (e) {
+  $("#selectedAudienceContainer").empty();
+
+  $(".audience-checkbox:checked").each(function (index) {
+    const groupType = $(this).data("grouptype");
+    const referenceId = $(this).data("referenceid");
+
+    $("#selectedAudienceContainer").append(`
+                <input type="hidden" name="SelectedAudience[${index}].GroupTypeId" value="${groupType}" />
+                <input type="hidden" name="SelectedAudience[${index}].ReferenceId" value="${referenceId}" />
+            `);
+  });
+});
+
+$("#formSaveNotice").on("submit", function (e) {
+  // Check if Custom audience selected
+  if ($("#group-type-custom").is(":checked")) {
+    const selectedCount = $(".audience-checkbox:checked").length;
+
+    if (selectedCount === 0) {
+      e.preventDefault(); // Stop form submission
+      alert("Please select at least one target audience.");
+      return false;
+    }
+
+    // If filters selected, populate hidden fields
+    $("#selectedAudienceContainer").empty();
+
+    $(".audience-checkbox:checked").each(function (index) {
+      const groupType = $(this).data("group-type");
+      const referenceId = $(this).val();
+
+      $("#selectedAudienceContainer").append(`
+                    <input type="hidden" name="AudiencesVM.SelectedAudience[${index}].GroupTypeId" value="${groupType}" />
+                    <input type="hidden" name="AudiencesVM.SelectedAudience[${index}].ReferenceId" value="${referenceId}" />
+                `);
+    });
+  }
+
+  console.log($("#selectedAudienceContainer"));
+
+  // If All is selected, no validation required
+});
